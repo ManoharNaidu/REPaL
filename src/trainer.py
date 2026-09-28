@@ -3330,11 +3330,11 @@ class ModelTrainer:
 
                     logits_by_prompt, _, pred_logits = model(**inputs)
 
-
+                with torch.no_grad():
                     # loss = binary_classification_criterion(pred_logits, batch[2])
-                    loss = binary_classification_criterion_alternative(pred_logits[:, 1], batch[2].float())
-                
-                    eval_loss += loss.item()
+                    loss = binary_classification_criterion_alternative(pred_logits[:, 1].float(), batch[2].float())
+
+                eval_loss += loss.item()
 
                 nb_eval_steps += 1
 
@@ -3540,11 +3540,12 @@ class ModelTrainer:
                 with torch.cuda.amp.autocast(enabled=self.use_amp):
                     logits_by_prompt, _, pred_logits = rel_NLI_model(**inputs)
 
-                    # loss = binary_classification_criterion(pred_logits, batch[2])
-                    loss = binary_classification_criterion_alternative(pred_logits[:, 1], batch[2].float())
+                # BCELoss is unsafe under autocast, so compute it in fp32 outside the block.
+                # loss = binary_classification_criterion(pred_logits, batch[2])
+                loss = binary_classification_criterion_alternative(pred_logits[:, 1].float(), batch[2].float())
 
-                    if self.args.accum_steps > 1:
-                        loss = loss / self.args.accum_steps
+                if self.args.accum_steps > 1:
+                    loss = loss / self.args.accum_steps
 
                 scaler.scale(loss).backward()
                 tr_loss += loss.item()
