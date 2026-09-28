@@ -7,3 +7,5 @@ src/__pycache__/
 
 scripts/run_init.sh
 results/
+
+.venv/
