@@ -1,10 +1,18 @@
 import argparse
+import sys
 from dataloader import REDataLoader
 from trainer import ModelTrainer
 import torch
 import os
 from multiprocessing import cpu_count
 os.environ['TIKTOKEN_CACHE_DIR'] = '' # in case the cache dir is occupied and you don't have access
+
+# Windows consoles default to cp1252, which can't encode many Unicode
+# characters (accents, em dashes, etc.) that show up in the training data.
+# Force UTF-8 stdout/stderr so print() doesn't crash on them.
+if sys.stdout.encoding is None or sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 
 def main():

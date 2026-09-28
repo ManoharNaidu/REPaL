@@ -9,3 +9,4 @@ scripts/run_init.sh
 results/
 
 .venv/
+__pycache__/

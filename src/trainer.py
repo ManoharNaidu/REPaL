@@ -3321,7 +3321,7 @@ class ModelTrainer:
             model.eval()
             for batch in tqdm(eval_dataloader, desc='Evaluating'):
                 batch = tuple(t.to(self.device) for t in batch)
-                with torch.no_grad(), torch.cuda.amp.autocast(enabled=self.use_amp):
+                with torch.no_grad(), torch.amp.autocast('cuda', enabled=self.use_amp):
                     inputs = {
                         'input_ids': batch[0],
                         'attention_mask': batch[1],
@@ -3522,7 +3522,7 @@ class ModelTrainer:
         margin_criterion = torch.nn.MarginRankingLoss(margin=0.2).to(self.device)
         binary_classification_criterion = nn.CrossEntropyLoss(reduction='mean')
         binary_classification_criterion_alternative = nn.BCELoss(reduction='mean')
-        scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
+        scaler = torch.amp.GradScaler('cuda', enabled=self.use_amp)
 
 
         for epoch_i in train_iterator:
@@ -3537,7 +3537,7 @@ class ModelTrainer:
                     'assigned_labels': batch[2],
                 }
 
-                with torch.cuda.amp.autocast(enabled=self.use_amp):
+                with torch.amp.autocast('cuda', enabled=self.use_amp):
                     logits_by_prompt, _, pred_logits = rel_NLI_model(**inputs)
 
                 # BCELoss is unsafe under autocast, so compute it in fp32 outside the block.

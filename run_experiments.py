@@ -59,6 +59,14 @@ from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
+# Windows consoles default to cp1252, which can't encode the non-ASCII
+# characters (accents, em dashes, etc.) that show up in the training data
+# printed by the src/run.py subprocess. Force UTF-8 here too so re-printing
+# the child's output doesn't crash.
+if sys.stdout.encoding is None or sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 REPO_ROOT = Path(__file__).resolve().parent
 RESULTS_DIR = REPO_ROOT / "results"
 
@@ -232,6 +240,7 @@ def run_one(cmd: list, env: dict, log_path: Path) -> int:
         proc = subprocess.Popen(
             cmd, cwd=str(REPO_ROOT), env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+            encoding="utf-8", errors="replace",
         )
         for line in proc.stdout:
             sys.stdout.write(line)
