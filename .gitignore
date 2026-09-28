@@ -2,7 +2,8 @@
 .hf_cache/
 data/
 reproduce_main_data/
+scripts/
+src/__pycache__/
 
 scripts/run_init.sh
-
-src/__pycache__/
+results/
