@@ -59,6 +59,7 @@ def main():
     parser.add_argument('--self_train_epochs', type=float, default=1, help='self training epochs')
     parser.add_argument('--update_interval', type=int, default=50, help='self training update interval')
     parser.add_argument('--early_stop', action='store_true', help='whether or not to enable early stop of self-training')
+    parser.add_argument('--use_amp', action='store_true', help='enable mixed-precision (fp16) training/inference via torch.cuda.amp. Reduces GPU memory and speeds up training on CUDA; ignored on CPU. The released code trains in fp32 by default, which uses ~5-6GB of fixed VRAM for a roberta-large backbone before any activations.')
 
 
     # output related hyperparameters

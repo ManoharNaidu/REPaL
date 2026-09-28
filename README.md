@@ -33,11 +33,26 @@ To convert it into the mutli-way relation classification setting, you can levera
 
 ## Requirements
 
-The codes are written in Python 3.8. Please first install the required packages by the following command:
+The codes are written in Python 3.8 (verified working on Python 3.11 as well). Please first install the required packages by the following command:
 
 ```
 pip install -r requirements.txt
 ```
+
+### Recommended GPU specification
+
+The `roberta-large-mnli` backbone is fine-tuned in fp32 by default (no mixed precision), which uses roughly 5.6GB of fixed VRAM per relation (model weights + Adam optimizer states + gradients) before any activation memory. The original `scripts/run_init.sh` / `scripts/run.sh` batch sizes (`--eval_batch_size 3600`, `--unlabel_infer_batch_size 4200`) assume 4 large (>=24GB) GPUs.
+
+| GPU VRAM | Works? | Recommended settings |
+|---|---|---|
+| CPU only | Not practical | Full 14/15-relation evaluation split can take many hours per pass; fine only for a quick single-relation smoke test with small batch sizes (`--eval_batch_size 16 --unlabel_infer_batch_size 16`). |
+| ~8GB (e.g. RTX 4000, RTX 3070) | Yes, with adjustments | `--train_batch_size 8 --accum_steps 2` (keeps the paper's effective batch size of 16), `--eval_batch_size 128 --unlabel_infer_batch_size 128`, and `--use_amp` to enable mixed precision (roughly halves activation memory, also faster). |
+| >=16GB (e.g. RTX 4080/4090, A4000 Ada, V100) | Yes | Paper's `--train_batch_size 16` works as-is; `--eval_batch_size`/`--unlabel_infer_batch_size` can go up to a few hundred without `--use_amp`, or match the paper's 3600/4200 on a single >=24GB GPU. |
+| Multi-GPU (paper setup) | Yes | Original batch sizes as released; the code wraps the model in `torch.nn.DataParallel` automatically when `torch.cuda.device_count() > 1`. |
+
+`--use_amp` (mixed-precision training via `torch.cuda.amp`) is opt-in and CUDA-only; it is a no-op on CPU.
+
+If you use [`run_experiments.py`](run_experiments.py) instead of the shell scripts, pass `--device-profile {cpu,small_gpu,gpu}` (auto-detected from `torch.cuda.get_device_properties` when omitted) and it will apply the batch sizes and `--use_amp` above automatically.
 
 
 ## Datasets

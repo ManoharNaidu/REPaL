@@ -125,20 +125,39 @@ STAGE_CONFIG = {
     },
 }
 
-# GPU (paper) vs CPU batch sizes. The paper's 3600 / 4200 assume 4 GPUs and
-# OOM on CPU / small GPUs.
+# Batch-size / precision profiles. The paper's eval/unlabel_infer=3600/4200
+# assume 4 large (>=24GB) GPUs and OOM on CPU or an 8GB card.
+#
+#   gpu       -- a big single GPU (>=16GB), paper's train_batch_size kept.
+#   small_gpu -- an 8GB card (e.g. RTX 4000). roberta-large-mnli in fp32 uses
+#                ~5.6GB of fixed VRAM (weights + Adam states + grads) before any
+#                activations, so train_batch_size is halved with accum_steps
+#                doubled to keep the same effective batch size as the paper,
+#                and AMP (--use_amp) is enabled to roughly halve activation
+#                memory and speed up training.
+#   cpu       -- no GPU. Training is impractically slow regardless of batch size;
+#                these keep it from OOMing on a full evaluation split.
 BATCH_PROFILE = {
     "gpu": {"eval_batch_size": 512, "unlabel_infer_batch_size": 512},
+    "small_gpu": {
+        "train_batch_size": 8, "accum_steps": 2,
+        "eval_batch_size": 128, "unlabel_infer_batch_size": 128,
+        "use_amp": True,
+    },
     "cpu": {"eval_batch_size": 16, "unlabel_infer_batch_size": 16},
 }
 
 
 def detect_device_profile(override: str | None) -> str:
-    if override in ("cpu", "gpu"):
+    if override in ("cpu", "gpu", "small_gpu"):
         return override
     try:
         import torch
-        return "gpu" if torch.cuda.is_available() else "cpu"
+        if not torch.cuda.is_available():
+            return "cpu"
+        # heuristic: <=10GB reported total memory -> treat as a small GPU
+        total_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        return "small_gpu" if total_gb <= 10 else "gpu"
     except Exception:
         return "cpu"
 
@@ -311,8 +330,11 @@ def main():
                     help="dir holding <dataset>_<split>/ folders. Use "
                          "'reproduce_main_data/data' to reuse the authors' cached "
                          "GPT-4o synthesis (no OPENAI_API_KEY needed).")
-    ap.add_argument("--device-profile", choices=["cpu", "gpu"], default=None,
-                    help="override auto-detection of eval/inference batch sizes")
+    ap.add_argument("--device-profile", choices=["cpu", "gpu", "small_gpu"], default=None,
+                    help="override auto-detection of batch sizes / AMP. "
+                         "'small_gpu' targets an 8GB card (e.g. RTX 4000): "
+                         "halved train_batch_size + doubled accum_steps to match "
+                         "the paper's effective batch size, plus AMP.")
     ap.add_argument("--seed", type=int, default=None, help="override the training seed")
     ap.add_argument("--dry-run", action="store_true", help="print commands only")
     ap.add_argument("--list", action="store_true", help="list planned runs and exit")
@@ -363,6 +385,11 @@ def main():
     if profile == "cpu":
         print("NOTE: running on CPU. eval/inference batch sizes forced small; "
               "a full split will take many hours -- prefer a GPU (Colab).", file=sys.stderr)
+    elif profile == "small_gpu":
+        print("NOTE: small_gpu profile (<=~8-10GB VRAM): train_batch_size=8 with "
+              "accum_steps=2 (effective batch 16, matching the paper) and AMP "
+              "enabled. Raise --device-profile gpu if you have >=16GB VRAM.",
+              file=sys.stderr)
 
     total, done = len(plan), 0
     for ds, split, stage in plan:

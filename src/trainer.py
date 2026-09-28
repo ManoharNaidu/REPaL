@@ -101,6 +101,12 @@ class ModelTrainer:
         self.dataloader: REDataLoader = dataloader
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # mixed precision (fp16) training: the released code always trains in fp32,
+        # which uses ~5-6GB of fixed VRAM for a roberta-large backbone (weights +
+        # Adam states + grads) before any activations. AMP roughly halves activation
+        # memory and speeds up training on GPUs with tensor cores. Opt-in via
+        # --use_amp; no-op on CPU.
+        self.use_amp = bool(getattr(args, 'use_amp', False)) and self.device == 'cuda'
 
 
     def save_model(self, save_path, pytorch_save_dict):
@@ -3315,7 +3321,7 @@ class ModelTrainer:
             model.eval()
             for batch in tqdm(eval_dataloader, desc='Evaluating'):
                 batch = tuple(t.to(self.device) for t in batch)
-                with torch.no_grad():
+                with torch.no_grad(), torch.cuda.amp.autocast(enabled=self.use_amp):
                     inputs = {
                         'input_ids': batch[0],
                         'attention_mask': batch[1],
@@ -3516,8 +3522,9 @@ class ModelTrainer:
         margin_criterion = torch.nn.MarginRankingLoss(margin=0.2).to(self.device)
         binary_classification_criterion = nn.CrossEntropyLoss(reduction='mean')
         binary_classification_criterion_alternative = nn.BCELoss(reduction='mean')
+        scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
 
-        
+
         for epoch_i in train_iterator:
             epoch_iterator = tqdm(train_dataloader, desc='Iteration')
             for step, batch in enumerate(epoch_iterator):
@@ -3530,21 +3537,24 @@ class ModelTrainer:
                     'assigned_labels': batch[2],
                 }
 
-                logits_by_prompt, _, pred_logits = rel_NLI_model(**inputs)
+                with torch.cuda.amp.autocast(enabled=self.use_amp):
+                    logits_by_prompt, _, pred_logits = rel_NLI_model(**inputs)
 
-                # loss = binary_classification_criterion(pred_logits, batch[2])
-                loss = binary_classification_criterion_alternative(pred_logits[:, 1], batch[2].float())
-                
-                if self.args.accum_steps > 1:
-                    loss = loss / self.args.accum_steps
-                    
-                loss.backward()
+                    # loss = binary_classification_criterion(pred_logits, batch[2])
+                    loss = binary_classification_criterion_alternative(pred_logits[:, 1], batch[2].float())
+
+                    if self.args.accum_steps > 1:
+                        loss = loss / self.args.accum_steps
+
+                scaler.scale(loss).backward()
                 tr_loss += loss.item()
 
 
                 if (step + 1) % self.args.accum_steps == 0:
+                    scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(rel_NLI_model.parameters(), self.args.max_grad_norm)
-                    optimizer.step()
+                    scaler.step(optimizer)
+                    scaler.update()
                     scheduler.step()
 
                     rel_NLI_model.zero_grad()
