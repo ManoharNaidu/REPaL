@@ -54,6 +54,8 @@ The `roberta-large-mnli` backbone is fine-tuned in fp32 by default (no mixed pre
 
 If you use [`run_experiments.py`](run_experiments.py) instead of the shell scripts, pass `--device-profile {cpu,small_gpu,gpu}` (auto-detected from `torch.cuda.get_device_properties` when omitted) and it will apply the batch sizes and `--use_amp` above automatically.
 
+Renting a larger GPU (e.g. on [vast.ai](https://vast.ai)) rather than running on a small local card avoids `small_gpu`/AMP entirely — see [docs/VASTAI.md](docs/VASTAI.md) for a Docker-based setup guide.
+
 
 ## Datasets
 
