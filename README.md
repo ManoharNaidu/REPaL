@@ -54,7 +54,7 @@ The `roberta-large-mnli` backbone is fine-tuned in fp32 by default (no mixed pre
 
 If you use [`run_experiments.py`](run_experiments.py) instead of the shell scripts, pass `--device-profile {cpu,small_gpu,gpu}` (auto-detected from `torch.cuda.get_device_properties` when omitted) and it will apply the batch sizes and `--use_amp` above automatically.
 
-Renting a larger GPU (e.g. on [vast.ai](https://vast.ai)) rather than running on a small local card avoids `small_gpu`/AMP entirely — see [docs/VASTAI.md](docs/VASTAI.md) for a Docker-based setup guide.
+Renting a larger GPU (e.g. on [vast.ai](https://vast.ai)) rather than running on a small local card avoids `small_gpu`/AMP entirely. On a fresh instance, `bash vastai_setup.sh` installs dependencies, fetches the datasets, and starts the full sweep in one go — see [docs/VASTAI.md](docs/VASTAI.md) for the full walkthrough and GPU sizing notes.
 
 
 ## Datasets
@@ -79,14 +79,24 @@ You can adjust the `--dataset_dir` for running experiments over data in your spe
 
 ## Definition-Based Seed Construction and First-Round of Pattern Learning w/ SLM
 
+The original `scripts/run_init.sh` was replaced by [`run_experiments.py`](run_experiments.py), which drives `src/run.py` directly and writes structured results under `results/`. Run just the `initial` stage:
+
 ```
-bash scripts/run_init.sh
+python run_experiments.py --stages initial --data-root reproduce_main_data/data
 ```
 
 ## Feedback-Driven Instance Improvement & Bias Rectification
 
+Likewise, `scripts/run.sh` was replaced by the `followup` stage:
+
 ```
-bash scripts/run.sh
+python run_experiments.py --stages followup --data-root reproduce_main_data/data
+```
+
+Or run both stages for every split/dataset in one sweep (see `python run_experiments.py --help` for all options, and [docs/VASTAI.md](docs/VASTAI.md) / [vastai_setup.sh](vastai_setup.sh) for a one-shot cloud setup):
+
+```
+python run_experiments.py --data-root reproduce_main_data/data --skip-existing --continue-on-error
 ```
 
 
@@ -127,6 +137,7 @@ Please cite the following paper if you find the code helpful!
 ## Code Base Structure
 ```
 $CODE_DIR
+├── CLAUDE.md            # context for Claude Code, if you use it on this repo
 ├── data
 │   ├── fewrel_defon_1
 │   ├── fewrel_defon_2
@@ -136,6 +147,9 @@ $CODE_DIR
 │   ├── wikizsl_defon_1
 │   ├── wikizsl_defon_2
 │   └── wikizsl_defon_3
+├── docs
+│   └── VASTAI.md        # cloud GPU setup walkthrough
+├── Dockerfile
 ├── figures
 ├── README.md
 ├── reproduce
@@ -143,17 +157,17 @@ $CODE_DIR
 │   │   └── data
 │   └── README.md
 ├── requirements.txt
-├── scripts
-│   ├── run_init.sh
-│   └── run.sh
-└── src
-    ├── dataloader.py
-    ├── __init__.py
-    ├── llm_gen.py
-    ├── model.py
-    ├── pattern_learning.py
-    ├── run.py
-    ├── trainer.py
-    └── utils.py
+├── results               # run_experiments.py output: summary.csv, aggregate.csv, per-run logs
+├── run_experiments.py    # experiment driver (replaces the old scripts/run_init.sh, run.sh)
+├── src
+│   ├── dataloader.py
+│   ├── __init__.py
+│   ├── llm_gen.py
+│   ├── model.py
+│   ├── pattern_learning.py
+│   ├── run.py
+│   ├── trainer.py
+│   └── utils.py
+└── vastai_setup.sh       # one-shot setup + run script for a fresh cloud instance
 
 ```

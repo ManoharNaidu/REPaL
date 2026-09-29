@@ -7,6 +7,22 @@ Renting a >=16GB card on vast.ai removes that bottleneck (see the GPU table
 in [README.md](../README.md#recommended-gpu-specification)) and lets you use
 `--device-profile gpu` instead.
 
+## Quick start
+
+Once the instance is up and the repo is cloned (step 2 below):
+
+```bash
+bash vastai_setup.sh
+```
+
+This installs Python/system dependencies, downloads the dataset archives
+(skipped if `data/`/`reproduce_main_data/` are already present, e.g. via
+`rsync`), and kicks off the full `fewrel_defon` + `wikizsl_defon` sweep with
+`--device-profile gpu`. Pass `--setup-only` to stop after setup, or
+`--run-only` to skip straight to the sweep on a box that's already set up.
+The sections below explain each step it automates, plus the Docker-based
+alternative.
+
 ## 1. Rent an instance
 
 - Recommended: a single **RTX 4090 (24GB)** or **A100 (40GB)** on-demand instance.
