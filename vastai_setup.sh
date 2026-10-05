@@ -21,7 +21,7 @@ for arg in "$@"; do
   esac
 done
 
-GDRIVE_FOLDER_URL="https://drive.google.com/drive/folders/1tGDTPhQ1-oy61lqSv00nJSP84Oai31I5"
+HF_DATASET_REPO="Manu2711/Application_of_DS-REPaL"
 
 if [ "$RUN_ONLY" = false ]; then
   echo "==> [1/4] System packages"
@@ -32,26 +32,18 @@ if [ "$RUN_ONLY" = false ]; then
 
   echo "==> [2/4] Python packages"
   pip install --no-cache-dir -r requirements.txt
-  pip install --no-cache-dir gdown
+  pip install --no-cache-dir "huggingface_hub[cli]"
 
   echo "==> [3/4] Data"
   if [ -d data ] && [ -d reproduce_main_data ]; then
     echo "    data/ and reproduce_main_data/ already present, skipping download."
   else
-    echo "    Downloading dataset archives from Google Drive..."
-    gdown --folder "$GDRIVE_FOLDER_URL" -O gdrive_download --quiet
-
-    if [ ! -d data ] && [ -f gdrive_download/data.tar.gz ]; then
-      tar -xf gdrive_download/data.tar.gz
-    fi
-    if [ ! -d reproduce_main_data ] && [ -f gdrive_download/reproduce_main_data.tar.gz ]; then
-      tar -xf gdrive_download/reproduce_main_data.tar.gz
-    fi
-    rm -rf gdrive_download
+    echo "    Downloading dataset from Hugging Face ($HF_DATASET_REPO)..."
+    hf download "$HF_DATASET_REPO" --repo-type dataset --local-dir .
 
     if [ ! -d data ] || [ ! -d reproduce_main_data ]; then
-      echo "    WARNING: expected data/ and reproduce_main_data/ after extraction but at least one is missing." >&2
-      echo "    Check the Google Drive folder contents / archive names haven't changed, or rsync them up manually (see docs/VASTAI.md)." >&2
+      echo "    WARNING: expected data/ and reproduce_main_data/ after download but at least one is missing." >&2
+      echo "    Check the dataset repo contents haven't changed, or rsync them up manually (see docs/VASTAI.md)." >&2
     fi
   fi
 

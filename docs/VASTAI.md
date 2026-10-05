@@ -15,8 +15,8 @@ Once the instance is up and the repo is cloned (step 2 below):
 bash vastai_setup.sh
 ```
 
-This installs Python/system dependencies, downloads the dataset archives
-(skipped if `data/`/`reproduce_main_data/` are already present, e.g. via
+This installs Python/system dependencies, downloads the dataset from Hugging
+Face (skipped if `data/`/`reproduce_main_data/` are already present, e.g. via
 `rsync`), and kicks off the full `fewrel_defon` + `wikizsl_defon` sweep with
 `--device-profile gpu`. Pass `--setup-only` to stop after setup, or
 `--run-only` to skip straight to the sweep on a box that's already set up.
@@ -72,19 +72,30 @@ pip install -r requirements.txt
 
 ## 4. Get the data
 
-Same as the main README: download from the
-[Google Drive folder](https://drive.google.com/drive/folders/1tGDTPhQ1-oy61lqSv00nJSP84Oai31I5?usp=sharing)
-directly on the instance with `gdown`, or `rsync`/`scp` your already-extracted
-local `data/` and `reproduce_main_data/` folders up:
+The dataset (`data/` + `reproduce_main_data/`, with the authors' cached GPT-4o
+synthesis under each split's `cache/llm_*/` but *not* the large local training
+checkpoints under `cache/snowball_ckpt_*/` — those are regenerated per run and
+don't need to travel with the dataset) is mirrored on the Hugging Face Hub at
+[Manu2711/Application_of_DS-REPaL](https://huggingface.co/datasets/Manu2711/Application_of_DS-REPaL)
+(public, no token needed to download). Pull it directly on the instance:
+
+```bash
+pip install "huggingface_hub[cli]"
+hf download Manu2711/Application_of_DS-REPaL --repo-type dataset --local-dir .
+```
+
+This lands `data/` and `reproduce_main_data/` directly in the repo root,
+matching what `--data-root reproduce_main_data/data` expects. `rsync`/`scp`
+from your local machine works too if you'd rather not round-trip through HF:
 
 ```bash
 # from your local machine
-rsync -avz --progress reproduce_main_data/ user@<instance-ip>:~/REPaL/reproduce_main_data/
+rsync -avz --progress --exclude 'cache/snowball_ckpt_*' reproduce_main_data/ user@<instance-ip>:~/REPaL/reproduce_main_data/
 ```
 
-Prefer `gdown` on the instance directly if your link-up bandwidth is limited —
-downloading straight from Google Drive to the GPU box is usually faster than
-uploading from a home connection.
+The original [Google Drive folder](https://drive.google.com/drive/folders/1tGDTPhQ1-oy61lqSv00nJSP84Oai31I5?usp=sharing)
+from the paper authors (via `gdown`) still works too if you'd rather use that
+source.
 
 ## 5. Run
 
