@@ -2,7 +2,7 @@ aiohttp==3.9.5
 kneed==0.8.5
 matplotlib==3.7.5
 nltk==3.8.1
-numpy==1.23.5
+numpy>=1.23.5,<2  # spacy 3.7 / thinc 8.2 need numpy 1.x; 1.23.5 has no py3.12 wheel
 openai==1.37.1
 httpx<0.28  # openai 1.37.1 passes the `proxies` kwarg removed in httpx 0.28
 scikit_learn==1.3.2
@@ -11,7 +11,7 @@ sentence_transformers==3.0.1
 spacy==3.7.5
 thefuzz==0.22.1
 tiktoken==0.7.0
-torch==2.4.0
+torch>=2.4.0  # don't pin: the GPU arch decides the build (Blackwell / RTX 50xx needs a cu128+ wheel, i.e. torch>=2.7)
 tqdm==4.66.4
 transformers==4.43.3
 tensorboard

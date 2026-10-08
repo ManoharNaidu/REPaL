@@ -23,6 +23,14 @@ done
 
 HF_DATASET_REPO="Manu2711/Application_of_DS-REPaL"
 
+# vast.ai PyTorch images keep torch in /venv/main, which is only on PATH in
+# interactive login shells -- activate it so nohup/ssh/non-interactive runs
+# find python/pip (and install into the env that has the arch-matched torch).
+if [ -z "${VIRTUAL_ENV:-}" ] && [ -f /venv/main/bin/activate ]; then
+  # shellcheck disable=SC1091
+  source /venv/main/bin/activate
+fi
+
 if [ "$RUN_ONLY" = false ]; then
   echo "==> [1/4] System packages"
   if command -v apt-get >/dev/null 2>&1; then
@@ -31,6 +39,8 @@ if [ "$RUN_ONLY" = false ]; then
   fi
 
   echo "==> [2/4] Python packages"
+  # requirements.txt leaves torch unpinned so an image's preinstalled, arch-matched
+  # torch build is kept (a cu121 torch 2.4 has no kernels for Blackwell GPUs).
   pip install --no-cache-dir -r requirements.txt
   pip install --no-cache-dir "huggingface_hub[cli]"
 
@@ -40,6 +50,9 @@ if [ "$RUN_ONLY" = false ]; then
   else
     echo "    Downloading dataset from Hugging Face ($HF_DATASET_REPO)..."
     hf download "$HF_DATASET_REPO" --repo-type dataset --local-dir .
+    # The dataset repo ships its own LFS .gitattributes (which marks *.png etc. as
+    # LFS); dropped into this repo root it makes git see figures/*.png as modified.
+    rm -f .gitattributes
 
     if [ ! -d data ] || [ ! -d reproduce_main_data ]; then
       echo "    WARNING: expected data/ and reproduce_main_data/ after download but at least one is missing." >&2

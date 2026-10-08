@@ -138,7 +138,7 @@ class REDataLoader:
 
         if os.path.exists(cache_file):
             print(f"   Cached processed file exists. Loading processed files from {cache_file}...")
-            cached_processed_data = torch.load(cache_file)
+            cached_processed_data = torch.load(cache_file, weights_only=False)
             return cached_processed_data['raw_data'], cached_processed_data['entPairMention2localExIds'], cached_processed_data['rel2localExIds'], cached_processed_data['processed_data']
         
         else:
@@ -468,7 +468,7 @@ class REDataLoader:
         #   if it exists, load and use; otherwise, process and store
         similarity_ckpt_file = os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{target_rel}{ckpt_file_suffix}.pt')
         if os.path.exists(similarity_ckpt_file) and load_or_save_cache:
-            processed_data = torch.load(similarity_ckpt_file)
+            processed_data = torch.load(similarity_ckpt_file, weights_only=False)
             input_ids, attention_mask, assigned_labels = processed_data['input_ids'], processed_data['attention_mask'], processed_data['assigned_labels']
 
             if rank is not None: 

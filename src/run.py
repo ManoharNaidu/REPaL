@@ -96,6 +96,7 @@ def main():
     parser.add_argument('--choose_by_elbow', action='store_true', help='selecting trained ckpts for test evaluation. If set to True, will select based on the elbow point of training loss curve. If set to False, will use the last element epoch number in args.save_epochs list. (This argument is not related to the main experiments we run. Eventually, the model checkpoint will be chosen based on the performance on the dev set.)')
     parser.add_argument('--run_neg_rel_gen', action='store_true', help='whether or not to generate negative relation definitions using LLM')
     parser.add_argument('--logging_epochs', type=int, nargs='+', default=[4], help='epochs to save the evaluation results.')
+    parser.add_argument('--keep_only_dev_chosen_ckpt', action='store_true', help='after training a relation, delete every epoch ckpt except the dev-chosen one (the only one re-loaded later). Each ckpt is ~1.4GB; without this up to 4 are kept per relation.')
 
     
     # GPT hyperparams

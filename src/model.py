@@ -100,7 +100,13 @@ DEFAULT_RATE_LIMITS = {
         "max_tokens_per_minute": 40000,
     },
     "gpt-4": {
-        "max_requests_per_minute": 5000, 
+        "max_requests_per_minute": 5000,
+        "max_tokens_per_minute": 600000,
+    },
+    # local open-weight models served through an OpenAI-compatible endpoint (OPENAI_BASE_URL, e.g. vLLM);
+    # no provider quota, so don't fall back to the 10k-TPM default throttle
+    "Qwen/": {
+        "max_requests_per_minute": 5000,
         "max_tokens_per_minute": 600000,
     },
 }

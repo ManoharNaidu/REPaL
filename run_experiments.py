@@ -56,6 +56,7 @@ import subprocess
 import sys
 import time
 from copy import deepcopy
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -74,6 +75,8 @@ RESULTS_DIR = REPO_ROOT / "results"
 DATASET_SPLITS = {
     "fewrel_defon": ["1", "2", "3", "4", "5"],
     "wikizsl_defon": ["1", "2", "3"],
+    "semeval": ["1"],   # built by tools/build_semeval_defon.py
+    "nyt": ["1"],       # built by tools/build_nyt_defon.py
 }
 
 # Paper-reported REPaL scores, for side-by-side comparison in aggregate.csv.
@@ -81,6 +84,8 @@ DATASET_SPLITS = {
 PAPER_REFERENCE_F1 = {
     "fewrel_defon": None,
     "wikizsl_defon": None,
+    "semeval": None,
+    "nyt": None,
 }
 
 
@@ -116,6 +121,8 @@ COMMON_CONFIG = {
     "run_LLM_json_parser_def": True,
     "llm_model_ckpt_parser": None,   # filled from PARSER_LLM at runtime
     "llm_model_ckpt": None,          # filled from BASE_LLM at runtime
+    # disk: each epoch ckpt is a ~1.4GB fp32 state dict; keep only the one that is re-loaded
+    "keep_only_dev_chosen_ckpt": True,
 }
 
 STAGE_CONFIG = {
@@ -153,11 +160,14 @@ BATCH_PROFILE = {
         "use_amp": True,
     },
     "cpu": {"eval_batch_size": 16, "unlabel_infer_batch_size": 16},
+    # sharing a GPU with another process (e.g. a local vLLM server): smaller inference batches only;
+    # training batch size / precision are the same as "gpu", so results stay comparable
+    "gpu_shared": {"eval_batch_size": 128, "unlabel_infer_batch_size": 128},
 }
 
 
 def detect_device_profile(override: str | None) -> str:
-    if override in ("cpu", "gpu", "small_gpu"):
+    if override in ("cpu", "gpu", "small_gpu", "gpu_shared"):
         return override
     try:
         import torch
@@ -250,6 +260,24 @@ def run_one(cmd: list, env: dict, log_path: Path) -> int:
     return proc.returncode
 
 
+def prune_split_ckpts(dataset_dir: Path) -> float:
+    """Delete a split's model ckpts and tokenized unlabeled-corpus tensors (~250MB per relation,
+    regenerable). Results and `*_unlabeled_inference.pt` files are kept. Returns GB freed."""
+    freed = 0
+    cache = dataset_dir / "cache"
+    for f in [*cache.rglob("epoch_model_ckpt/*.pt"), *cache.rglob("*_unlabeled.pt")]:
+        freed += f.stat().st_size
+        f.unlink()
+    return freed / 1024 ** 3
+
+
+def split_done(rows: list, ds: str, split: str, stages: list) -> bool:
+    ok = {(r["stage"]) for r in rows
+          if r.get("dataset") == ds and r.get("split") == split
+          and r.get("exit_code") == 0 and r.get("chosen_f1") is not None}
+    return all(st in ok for st in stages)
+
+
 # --------------------------------------------------------------------------- #
 # Summary / aggregate tables
 # --------------------------------------------------------------------------- #
@@ -258,6 +286,22 @@ SUMMARY_FIELDS = [
     "chosen_precision", "chosen_recall", "chosen_f1",
     "best_epoch", "best_f1", "data_root", "device_profile", "timestamp",
 ]
+
+
+@contextmanager
+def summary_lock():
+    """Exclusive lock around read-modify-write of summary.json (no-op where fcntl is missing, e.g. Windows)."""
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    with open(RESULTS_DIR / ".summary.lock", "w") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lk, fcntl.LOCK_UN)
 
 
 def load_summary() -> list:
@@ -339,7 +383,7 @@ def main():
                     help="dir holding <dataset>_<split>/ folders. Use "
                          "'reproduce_main_data/data' to reuse the authors' cached "
                          "GPT-4o synthesis (no OPENAI_API_KEY needed).")
-    ap.add_argument("--device-profile", choices=["cpu", "gpu", "small_gpu"], default=None,
+    ap.add_argument("--device-profile", choices=["cpu", "gpu", "small_gpu", "gpu_shared"], default=None,
                     help="override auto-detection of batch sizes / AMP. "
                          "'small_gpu' targets an 8GB card (e.g. RTX 4000): "
                          "halved train_batch_size + doubled accum_steps to match "
@@ -353,6 +397,10 @@ def main():
                     help="keep going if a run fails (default: stop)")
     ap.add_argument("--skip-existing", action="store_true",
                     help="skip a run whose metrics.json already has a chosen_f1")
+    ap.add_argument("--keep-all-ckpts", action="store_true",
+                    help="keep every saved epoch ckpt (the released code's behaviour) and don't "
+                         "delete a split's model ckpts once all its stages succeed. Needs "
+                         "hundreds of GB of disk for a full sweep.")
     args = ap.parse_args()
 
     RESULTS_DIR.mkdir(exist_ok=True)
@@ -427,6 +475,8 @@ def main():
         cfg["output_dir"] = str(out_dir) + os.sep
         if args.seed is not None:
             cfg["seed"] = args.seed
+        if args.keep_all_ckpts:
+            cfg["keep_only_dev_chosen_ckpt"] = False
 
         cmd = build_command(cfg, dataset_dir)
         if args.dry_run:
@@ -457,15 +507,21 @@ def main():
             "data_root": args.data_root, "device_profile": profile,
             "timestamp": datetime.now().isoformat(timespec="seconds"),
         }
-        summary_rows = [
-            r for r in summary_rows
-            if not (r.get("dataset") == ds and r.get("split") == split and r.get("stage") == stage)
-        ]
-        summary_rows.append(row)
-        write_summary(summary_rows)
-        write_aggregate(summary_rows)
+        # several run_experiments.py processes may run at once (one per GPU): merge into the
+        # on-disk summary under a lock instead of overwriting it with this process's stale copy
+        with summary_lock():
+            summary_rows = [
+                r for r in load_summary()
+                if not (r.get("dataset") == ds and r.get("split") == split and r.get("stage") == stage)
+            ]
+            summary_rows.append(row)
+            write_summary(summary_rows)
+            write_aggregate(summary_rows)
 
         print(f"  -> exit={rc}  chosen_f1={row['chosen_f1']}  time={elapsed}s")
+        if not args.keep_all_ckpts and split_done(summary_rows, ds, split, args.stages):
+            print(f"  pruned {prune_split_ckpts(dataset_dir):.1f}GB of model ckpts for {ds}_{split} "
+                  "(all stages done; use --keep-all-ckpts to keep them)")
         if rc != 0 and not args.continue_on_error:
             print("  stopping (use --continue-on-error to keep going)")
             sys.exit(rc)

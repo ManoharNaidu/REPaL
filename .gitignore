@@ -11,3 +11,14 @@ results/
 .venv/
 __pycache__/
 .claude/
+# hf download --local-dir . metadata
+.cache/
+
+# unreadable damaged HF cache from the 2026-10-07 disk problem (git cannot stat it)
+.hf_cache.corrupt/
+# raw downloads used by tools/build_*_defon.py (re-downloadable)
+.dataset_probe/
+# separate git repo with its own history (see dashboard/CHANGELOG.md)
+dashboard/
+# scratch file written by src/llm_gen.py JSON parser
+temp.jsonl

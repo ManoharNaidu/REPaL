@@ -770,7 +770,7 @@ class ModelTrainer:
         if not os.path.exists(llm_ckpt_folder): os.makedirs(llm_ckpt_folder)
         rels_pos_examples_ckpt = os.path.join(llm_ckpt_folder, f'rel_init_pos.pt')
         if os.path.exists(rels_pos_examples_ckpt):
-            rels_pos_examples = torch.load(rels_pos_examples_ckpt)
+            rels_pos_examples = torch.load(rels_pos_examples_ckpt, weights_only=False)
         else:
             rels_pos_examples = self.LLM_init_pos_generation_parallel(rel_set=rel_set, rel_def_prompt_list=[self.dataloader.rel_info[r]["typed_desc_prompt"] for r in rel_set], save_suffix=f'_{num_init_pos_examples}p/', num_init_pos_examples=num_init_pos_examples, llm_ckpt_folder=llm_ckpt_folder)
             torch.save(rels_pos_examples, rels_pos_examples_ckpt)
@@ -782,7 +782,7 @@ class ModelTrainer:
 
         rels_dev_pos_examples_ckpt = os.path.join(llm_ckpt_folder, f'rel_dev_pos_0.pt')
         if os.path.exists(rels_dev_pos_examples_ckpt):
-            rels_dev_pos_examples = torch.load(rels_dev_pos_examples_ckpt)
+            rels_dev_pos_examples = torch.load(rels_dev_pos_examples_ckpt, weights_only=False)
         else:
             llm_ckpt_dev_folder = os.path.join(llm_ckpt_folder, 'dev')
             os.makedirs(llm_ckpt_dev_folder, exist_ok=True)
@@ -798,7 +798,7 @@ class ModelTrainer:
         if self.args.run_neg_init_gen:
             rels_neg_examples_ckpt = os.path.join(llm_neg_ckpt_folder, f'rel_init_neg.pt')
             if os.path.exists(rels_neg_examples_ckpt):
-                rels_neg_examples = torch.load(rels_neg_examples_ckpt)
+                rels_neg_examples = torch.load(rels_neg_examples_ckpt, weights_only=False)
             else:
                 rels_neg_examples = self.LLM_init_neg_generation(rel_set=rel_set, rel_def_prompt_list=[self.dataloader.rel_info[r]["typed_desc_prompt"] for r in rel_set], save_suffix=f'_{self.args.num_init_neg_examples_to_generate}n/', num_neg_rels_to_generate=self.args.num_init_neg_rels_to_generate, num_init_neg_examples=self.args.num_init_neg_examples_to_generate, llm_ckpt_folder=llm_neg_ckpt_folder)
                 torch.save(rels_neg_examples, rels_neg_examples_ckpt)
@@ -952,7 +952,7 @@ class ModelTrainer:
             if self.args.run_snowball == False: 
                 if os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
                     print(f"===run_snowball is False, but found cached unlabeled corpus inference results. Load cached unlabeled corpus inference results to hist_evaluation_results.===")
-                    hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+                    hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
                 else:
                     print(f"===run_snowball is False, didn't found cached unlabeled corpus inference results. Appending an empty python dictionary to hist_evaluation_results.===")
                     hist_evaluation_results['rel_unlabeled_inference_results'].append({})
@@ -961,7 +961,7 @@ class ModelTrainer:
 
             if ckpt_exists and os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
                 print(f"===Ckpt found for relation: {rel}. Skipped its optimization round and its unlabeled corpus inference round. Use cached unlabeled corpus inference instead.===")
-                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
                 continue
 
 
@@ -1304,7 +1304,7 @@ class ModelTrainer:
             representative_relation_patterns_examples = []
             representative_relation_patterns_examples_ckpt = os.path.join(llm_ckpt_folder_step1, 'feedback_examples.pt')
             if os.path.exists(representative_relation_patterns_examples_ckpt):
-                representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt)
+                representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt, weights_only=False)
 
             feedback_intermediate_results = {
                 'relation_patterns': [],
@@ -1500,7 +1500,7 @@ class ModelTrainer:
 
             assert os.path.exists(prev_chosen_model_state_dict_path), f"{prev_chosen_model_state_dict_path} does not exist! Variable prev_chosen_model_state_dict_strategy ({prev_chosen_model_state_dict_strategy}) needs to be revised!"
 
-            update_model_state_dict(model=rel_NLI_model, target_state_dict=torch.load(prev_chosen_model_state_dict_path, map_location='cpu'))
+            update_model_state_dict(model=rel_NLI_model, target_state_dict=torch.load(prev_chosen_model_state_dict_path, map_location='cpu', weights_only=False))
 
 
         test_div2local_indices = {
@@ -1518,7 +1518,7 @@ class ModelTrainer:
         if run_snowball == False: 
             if os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
                 print(f"{print_hierarchy}===run_snowball is False, but found cached unlabeled corpus inference results. Load cached unlabeled corpus inference results to hist_evaluation_results.===")
-                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
             else:
                 print(f"{print_hierarchy}===run_snowball is False, didn't found cached unlabeled corpus inference results. Appending an empty python dictionary to hist_evaluation_results.===")
                 hist_evaluation_results['rel_unlabeled_inference_results'].append({})
@@ -1528,7 +1528,7 @@ class ModelTrainer:
 
         if ckpt_exists and os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
             print(f"{print_hierarchy}===Cached unlabeled corpus inference results found for relation: {rel}. Skipping its optimization round and its unlabeled corpus inference round. Use cached unlabeled corpus inference instead.===")
-            hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+            hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
 
             return None
         
@@ -1672,7 +1672,7 @@ class ModelTrainer:
 
             assert os.path.exists(prev_chosen_model_state_dict_path), f"{prev_chosen_model_state_dict_path} does not exist! Variable prev_chosen_model_state_dict_strategy ({prev_chosen_model_state_dict_strategy}) needs to be revised!"
 
-            update_model_state_dict(model=rel_NLI_model, target_state_dict=torch.load(prev_chosen_model_state_dict_path, map_location='cpu'))
+            update_model_state_dict(model=rel_NLI_model, target_state_dict=torch.load(prev_chosen_model_state_dict_path, map_location='cpu', weights_only=False))
 
 
         test_div2local_indices = {
@@ -1705,7 +1705,7 @@ class ModelTrainer:
         if run_snowball == False: 
             if os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
                 print(f"{print_hierarchy}===run_snowball is False, but found cached unlabeled corpus inference results. Load cached unlabeled corpus inference results to hist_evaluation_results.===")
-                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+                hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
             else:
                 print(f"{print_hierarchy}===run_snowball is False, didn't found cached unlabeled corpus inference results. Appending an empty python dictionary to hist_evaluation_results.===")
                 hist_evaluation_results['rel_unlabeled_inference_results'].append({})
@@ -1715,7 +1715,7 @@ class ModelTrainer:
 
         if ckpt_exists and os.path.exists(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')):
             print(f"{print_hierarchy}===run_snowball is True. Cached unlabeled corpus inference results found for relation: {rel}. Skipping its optimization round and its unlabeled corpus inference round. Use cached unlabeled corpus inference instead.===")
-            hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt')))
+            hist_evaluation_results['rel_unlabeled_inference_results'].append(torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, f'{rel}_unlabeled_inference.pt'), weights_only=False))
 
             return None
         
@@ -1893,11 +1893,11 @@ class ModelTrainer:
             representative_relation_patterns_examples = []
             representative_relation_patterns_examples_scores = []
             representative_relation_patterns_examples_ckpt = os.path.join(llm_ckpt_folder, 'feedback_examples_pos.pt')
-            if os.path.exists(representative_relation_patterns_examples_ckpt): representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt)
+            if os.path.exists(representative_relation_patterns_examples_ckpt): representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt, weights_only=False)
 
             if feedback_w_scores:
                 representative_relation_patterns_examples_scores_ckpt = os.path.join(llm_ckpt_folder, 'feedback_examples_pos_scores.pt')
-                if os.path.exists(representative_relation_patterns_examples_scores_ckpt): representative_relation_patterns_examples_scores = torch.load(representative_relation_patterns_examples_scores_ckpt)
+                if os.path.exists(representative_relation_patterns_examples_scores_ckpt): representative_relation_patterns_examples_scores = torch.load(representative_relation_patterns_examples_scores_ckpt, weights_only=False)
             
             
             feedback_intermediate_results = {
@@ -2020,11 +2020,11 @@ class ModelTrainer:
                 else:
                     sample_num = 30
                     if feedback_w_scores:
-                        rel_representative_relation_patterns_examples_ids = random.sample(range(prev_rel_top_unlabeled_examples), k=sample_num)
+                        rel_representative_relation_patterns_examples_ids = random.sample(range(len(prev_rel_top_unlabeled_examples)), k=min(sample_num, len(prev_rel_top_unlabeled_examples)))
                         rel_representative_relation_patterns_examples = [prev_rel_top_unlabeled_examples[rel_representative_relation_patterns_examples_i] for rel_representative_relation_patterns_examples_i in rel_representative_relation_patterns_examples_ids]
                         rel_representative_relation_patterns_examples_scores = [float(prev_rel_top_unlabeled_examples_pos_scores[rel_representative_relation_patterns_examples_i]) for rel_representative_relation_patterns_examples_i in rel_representative_relation_patterns_examples_ids]
                     else:
-                        rel_representative_relation_patterns_examples = random.sample(prev_rel_top_unlabeled_examples, k=sample_num)
+                        rel_representative_relation_patterns_examples = random.sample(prev_rel_top_unlabeled_examples, k=min(sample_num, len(prev_rel_top_unlabeled_examples)))
                     
                 representative_relation_patterns_examples.append(rel_representative_relation_patterns_examples)
                 
@@ -2061,7 +2061,7 @@ class ModelTrainer:
         input_list_x_elt = []
         
         if os.path.exists(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt')):
-            prev_neg_def_prompts = torch.load(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt'))
+            prev_neg_def_prompts = torch.load(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt'), weights_only=False)
             
 
         for rel_id, (rel, rel_def_prompt) in enumerate(zip(rel_set, rel_def_prompt_list)):
@@ -2229,7 +2229,7 @@ class ModelTrainer:
         # first generate the followup negative rel def prompts
         task_id = 0
         if os.path.exists(os.path.join(llm_ckpt_folder, 'neg_def_prompts_followup.pt')):
-            followup_neg_def_prompts = torch.load(os.path.join(llm_ckpt_folder, 'neg_def_prompts_followup.pt'))
+            followup_neg_def_prompts = torch.load(os.path.join(llm_ckpt_folder, 'neg_def_prompts_followup.pt'), weights_only=False)
         else:
             if os.path.exists(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt')):
                 followup_neg_def_prompts, task_id = self.LLM_followup_neg_def_generation_parallel(rel_set=rel_set, rel_def_prompt_list=rel_def_prompt_list, representative_relation_patterns_examples=representative_relation_patterns_examples, neg_def_gen_template_list=neg_def_gen_template_list, num_neg_rels_to_generate_adjusted=num_followup_neg_rels_to_generate_adjusted, LLM_model=LLM_model_def_gen, max_num_attempts=max_num_attempts, task_id=task_id, llm_ckpt_folder=llm_ckpt_folder, sliding_window_size=sliding_window_size, enable_sliding_window=enable_sliding_window, prev_llm_ckpt_folder_neg=prev_llm_ckpt_folder_neg, feedback_w_scores=feedback_w_scores, representative_relation_patterns_examples_scores=representative_relation_patterns_examples_scores)
@@ -2344,7 +2344,7 @@ class ModelTrainer:
         
         torch.save(followup_neg_def_prompts, os.path.join(llm_ckpt_folder, 'neg_def_prompts_followup.pt'))
         if os.path.exists(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt')):
-            prev_neg_def_prompts = torch.load(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt'))
+            prev_neg_def_prompts = torch.load(os.path.join(prev_llm_ckpt_folder_neg, 'neg_def_prompts.pt'), weights_only=False)
             accumulated_neg_def_prompts = []
             for rel_id in range(len(prev_neg_def_prompts)):
                 accumulated_neg_def_prompts.append(deepcopy(prev_neg_def_prompts[rel_id]) + deepcopy(followup_neg_def_prompts[rel_id]))
@@ -2448,12 +2448,12 @@ class ModelTrainer:
             representative_relation_patterns_examples = []
             representative_relation_patterns_examples_scores = []
             representative_relation_patterns_examples_ckpt = os.path.join(llm_ckpt_folder, 'feedback_examples_neg.pt')
-            if os.path.exists(representative_relation_patterns_examples_ckpt): representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt)
+            if os.path.exists(representative_relation_patterns_examples_ckpt): representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt, weights_only=False)
             
             
             if feedback_w_scores:
                 representative_relation_patterns_examples_scores_ckpt = os.path.join(llm_ckpt_folder, 'feedback_examples_pos_scores_neg.pt')
-                if os.path.exists(representative_relation_patterns_examples_scores_ckpt): representative_relation_patterns_examples_scores = torch.load(representative_relation_patterns_examples_scores_ckpt)
+                if os.path.exists(representative_relation_patterns_examples_scores_ckpt): representative_relation_patterns_examples_scores = torch.load(representative_relation_patterns_examples_scores_ckpt, weights_only=False)
                 
                 
             feedback_intermediate_results = {
@@ -2498,7 +2498,7 @@ class ModelTrainer:
                 count_above_threshold = np.sum(prev_rel_unlabeled_pred_probs[:, 1] >= rel_new_threshold)
                 if count_above_threshold < rel_top_N:
                     print(f"{print_hierarchy}\tNumber of pred probs >= rel_new_threshold ({count_above_threshold}) is smaller than rel_top_N. Adjusting rel_top_N to this number.")
-                    rel_top_N = count_above_threshold
+                    rel_top_N = max(40, count_above_threshold) # same floor as the positive-feedback path (pos followup); avoids sampling 30 from <30
                 sorted_indices = np.argsort(prev_rel_unlabeled_pred_probs[:, 1])[::-1] # numpy array of (|unlabeled corpus|, ), indicating the indices from largest pos pred prob to least
                 prev_rel_unlabeled_inference_relative_ids_sorted = prev_rel_unlabeled_inference_relative_ids[sorted_indices] # numpy array of (|unlabeled corpus|, ), indicating the indices to the unlabeled corpus samples sorted by descending pos pred prob
                 prev_top_N_unlabeled_indices = prev_rel_unlabeled_inference_relative_ids_sorted[:rel_top_N]
@@ -2574,11 +2574,11 @@ class ModelTrainer:
                 else:
                     sample_num = 30
                     if feedback_w_scores:
-                        rel_representative_relation_patterns_examples_ids = random.sample(range(prev_rel_top_unlabeled_examples), k=sample_num)
+                        rel_representative_relation_patterns_examples_ids = random.sample(range(len(prev_rel_top_unlabeled_examples)), k=min(sample_num, len(prev_rel_top_unlabeled_examples)))
                         rel_representative_relation_patterns_examples = [prev_rel_top_unlabeled_examples[rel_representative_relation_patterns_examples_i] for rel_representative_relation_patterns_examples_i in rel_representative_relation_patterns_examples_ids]
                         rel_representative_relation_patterns_examples_scores = [float(prev_rel_top_unlabeled_examples_pos_scores[rel_representative_relation_patterns_examples_i]) for rel_representative_relation_patterns_examples_i in rel_representative_relation_patterns_examples_ids]
                     else:
-                        rel_representative_relation_patterns_examples = random.sample(prev_rel_top_unlabeled_examples, k=sample_num)
+                        rel_representative_relation_patterns_examples = random.sample(prev_rel_top_unlabeled_examples, k=min(sample_num, len(prev_rel_top_unlabeled_examples)))
                     
                     
                 representative_relation_patterns_examples.append(rel_representative_relation_patterns_examples)
@@ -2593,7 +2593,7 @@ class ModelTrainer:
             if feedback_w_scores and not os.path.exists(representative_relation_patterns_examples_scores_ckpt):
                 torch.save(representative_relation_patterns_examples_scores, representative_relation_patterns_examples_scores_ckpt)
                 
-            # representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt)
+            # representative_relation_patterns_examples = torch.load(representative_relation_patterns_examples_ckpt, weights_only=False)
             
             rels_neg_examples_followup = self.LLM_followup_neg_generation_parallel(rel_set=rel_set, rel_def_prompt_list=rel_def_prompt_list, representative_relation_patterns_examples=representative_relation_patterns_examples, num_followup_neg_examples=num_follow_neg_examples, llm_ckpt_folder=llm_ckpt_folder, prev_llm_ckpt_folder_neg=prev_llm_ckpt_folder_neg, feedback_w_scores=feedback_w_scores, representative_relation_patterns_examples_scores=representative_relation_patterns_examples_scores, sliding_window_size=sliding_window_size, enable_sliding_window=enable_sliding_window)
             torch.save(rels_neg_examples_followup, rels_neg_examples_followup_ckpt)
@@ -2634,7 +2634,7 @@ class ModelTrainer:
 
         # gathering feedback for continual LLM pos generation
         self._snowball_iterative_get_rels_pos_examples_followup(rels_pos_examples_followup_ckpt=rels_pos_examples_followup_ckpt, prev_llm_ckpt_folder=prev_llm_ckpt_folder, llm_ckpt_folder=llm_ckpt_folder, rel_set=rel_set, max_paraphrased_prompts=max_paraphrased_prompts, prev_hist_evaluation_results=prev_hist_evaluation_results, num_follow_pos_examples=num_follow_pos_examples, new_threshold=new_threshold, top_N=top_N, print_hierarchy=f"[Iter-{snowball_iter_id}/FeedbackTrain/FollowupPosGen]: ")
-        rels_pos_examples_followup = torch.load(rels_pos_examples_followup_ckpt)
+        rels_pos_examples_followup = torch.load(rels_pos_examples_followup_ckpt, weights_only=False)
         writer = SummaryWriter(log_dir=os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder, 'tensorboard/'))
 
 
@@ -2730,7 +2730,7 @@ class ModelTrainer:
 
 
 
-        prev_hist_evaluation_results = torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder_step0, 'result_all.pt'))
+        prev_hist_evaluation_results = torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder_step0, 'result_all.pt'), weights_only=False)
         assert prev_hist_evaluation_results['rel'] == prev_hist_evaluation_results['rel_set']
         rel_set = prev_hist_evaluation_results['rel_set']
         eval_locIds = prev_hist_evaluation_results['eval_locIds']
@@ -2813,13 +2813,13 @@ class ModelTrainer:
 
         # gathering feedback for continual LLM pos generation
         self._snowball_iterative_get_rels_pos_examples_followup(rels_pos_examples_followup_ckpt=rels_pos_examples_followup_ckpt, prev_llm_ckpt_folder=prev_llm_ckpt_folder_pos, llm_ckpt_folder=llm_ckpt_folder, rel_set=rel_set, max_paraphrased_prompts=max_paraphrased_prompts, prev_hist_evaluation_results=prev_hist_evaluation_results, num_follow_pos_examples=num_follow_pos_examples, new_threshold=new_threshold_pos, top_N=top_N_pos, print_hierarchy=f"[Iter-{snowball_iter_id}/FeedbackTrain/FollowupPosGen]: ", cluster_patterns=cluster_patterns, feedback_w_scores=feedback_w_scores, sliding_window_size=sliding_window_size, enable_sliding_window=enable_sliding_window, rels_dev_pos_examples_followup_ckpt=rels_dev_pos_examples_followup_ckpt)
-        rels_pos_examples_followup = torch.load(rels_pos_examples_followup_ckpt)
+        rels_pos_examples_followup = torch.load(rels_pos_examples_followup_ckpt, weights_only=False)
         
-        rels_dev_pos_examples_followup = torch.load(rels_dev_pos_examples_followup_ckpt)
+        rels_dev_pos_examples_followup = torch.load(rels_dev_pos_examples_followup_ckpt, weights_only=False)
         
         if self.args.run_neg_follow_gen:
             self._snowball_iterative_get_rels_neg_examples_followup(rels_neg_examples_followup_ckpt=rels_neg_examples_followup_ckpt, llm_ckpt_folder=llm_ckpt_folder, rel_set=rel_set, rel_def_prompt_list=[self.dataloader.rel_info[r]["typed_desc_prompt"] for r in rel_set], num_follow_neg_examples=self.args.num_follow_neg_examples_to_generate,  max_paraphrased_prompts=max_paraphrased_prompts, prev_hist_evaluation_results=prev_hist_evaluation_results, new_threshold=new_threshold_neg, top_N=top_N_neg, print_hierarchy=f"[Iter-{snowball_iter_id}/FeedbackTrain/FollowupNegGen]: ", cluster_patterns=cluster_patterns, feedback_w_scores=feedback_w_scores, prev_llm_ckpt_folder_neg=prev_llm_ckpt_folder_neg, sliding_window_size=sliding_window_size, enable_sliding_window=enable_sliding_window,)
-            rels_neg_examples_followup = torch.load(rels_neg_examples_followup_ckpt)
+            rels_neg_examples_followup = torch.load(rels_neg_examples_followup_ckpt, weights_only=False)
         else:
             rels_neg_examples_followup = None
         
@@ -2979,7 +2979,7 @@ class ModelTrainer:
         ckpt_sub_folder_iterative = f'snowball_iter_ckpt_{iterative_version}{save_suffix}{follow_save_suffix}_seed{self.args.seed}/'
         llm_ckpt_sub_folder_iterative = f'llm_{iterative_version}{follow_save_suffix}_seed{self.args.seed}/'
         
-        prev_hist_evaluation_results = torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder_step0, 'result_all.pt'))
+        prev_hist_evaluation_results = torch.load(os.path.join(self.args.dataset_dir, self.args.cache_sub_dir, ckpt_sub_folder_step0, 'result_all.pt'), weights_only=False)
         assert prev_hist_evaluation_results['rel'] == prev_hist_evaluation_results['rel_set']
         rel_set = prev_hist_evaluation_results['rel_set']
         eval_locIds = prev_hist_evaluation_results['eval_locIds']
@@ -3381,7 +3381,7 @@ class ModelTrainer:
 
 
         if os.path.exists(ckpt_file):
-            rel_hist_evaluation_results = torch.load(ckpt_file)
+            rel_hist_evaluation_results = torch.load(ckpt_file, weights_only=False)
             return rel_hist_evaluation_results, True, rel_NLI_model # True indicates the ckpt already exists
 
         # for visualization cache
@@ -3790,6 +3790,12 @@ class ModelTrainer:
             rel_hist_evaluation_results['dev_2_chosen_recall'] = rel_hist_evaluation_results['recall'][rel_hist_evaluation_results['eval_epochs'].index(dev_chosen_model_ckpt_epoch)]
             rel_hist_evaluation_results['dev_2_chosen_f1'] = rel_hist_evaluation_results['f1'][rel_hist_evaluation_results['eval_epochs'].index(dev_chosen_model_ckpt_epoch)]
 
+        # Each ckpt is a full ~1.4GB fp32 roberta-large state dict, and keeping the save/dev_1/dev_2
+        # epochs too costs up to ~5.7GB per relation (hundreds of GB over a sweep). Only the
+        # dev-chosen ckpt is ever re-loaded (unlabeled-corpus inference), so optionally keep just it.
+        if getattr(self.args, 'keep_only_dev_chosen_ckpt', False):
+            important_epochs_to_save = [rel_hist_evaluation_results['dev_chosen_rel_NLI_model_ckpt_epoch']]
+
         model_ckpt_file_pattern = re.compile(r'model_ckpt_epoch_(\d+)\.pt')
         for filename in os.listdir(epoch_model_ckpt_folder):
             match = model_ckpt_file_pattern.match(filename)
@@ -3867,7 +3873,7 @@ def NLIBased_Inference(rank, world_size, args, model_path, dataloader, inference
     model.to(rank)
     
     
-    update_model_state_dict(model=model, target_state_dict=torch.load(model_path, map_location='cuda'))
+    update_model_state_dict(model=model, target_state_dict=torch.load(model_path, map_location='cuda', weights_only=False))
     
 
     model = DDP(model, device_ids=[rank])
