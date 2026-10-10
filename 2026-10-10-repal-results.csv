@@ -1,0 +1,27 @@
+dataset,split,stage,precision,recall,f1,llm_used_for_synthesis,source_file
+fewrel_defon,1,initial,0.7083567817761109,0.7414278930945597,0.6548854592175949,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_1/initial/metrics.json
+fewrel_defon,1,followup,0.8094378770401972,0.6634567901234568,0.6860464303194048,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_1/followup/metrics.json
+fewrel_defon,2,initial,0.5963977366750637,0.8096218287884955,0.6539319569940901,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_2/initial/metrics.json
+fewrel_defon,2,followup,0.8723542711123565,0.710742097408764,0.7559229284464452,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_2/followup/metrics.json
+fewrel_defon,3,initial,0.6697600555957655,0.7356576448243116,0.643478489400474,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_3/initial/metrics.json
+fewrel_defon,3,followup,0.74025603027494,0.6759659476326144,0.6551047875315433,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_3/followup/metrics.json
+fewrel_defon,4,initial,0.759903940616011,0.7298412698412697,0.6620205725813165,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_4/initial/metrics.json
+fewrel_defon,4,followup,0.7891628965304356,0.689549247049247,0.6877101897028899,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_4/followup/metrics.json
+fewrel_defon,5,initial,0.6177808564265131,0.7588491169847102,0.6295240908360676,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_5/initial/metrics.json
+fewrel_defon,5,followup,0.7598368045010214,0.7007206352969064,0.6963397166444258,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/fewrel_defon_5/followup/metrics.json
+wikizsl_defon,1,initial,0.5279338408282105,0.6041158012246872,0.5124999124522722,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_1/initial/metrics.json
+wikizsl_defon,1,followup,0.6676726317140563,0.5220473495392448,0.5126848223448411,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_1/followup/metrics.json
+wikizsl_defon,2,initial,0.7706004246477551,0.4086080498374395,0.45907020073516913,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_2/initial/metrics.json
+wikizsl_defon,2,followup,0.7317091515909302,0.3119700421218394,0.39264889424270316,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_2/followup/metrics.json
+wikizsl_defon,3,initial,0.6431629423226468,0.5294494024410705,0.5028729653726356,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_3/initial/metrics.json
+wikizsl_defon,3,followup,0.6611821768579897,0.43573419902331195,0.47316122872981686,"GPT-4o (authors' cached bundle, gpt-4o-2024-05-13)",results/wikizsl_defon_3/followup/metrics.json
+semeval,1,initial,0.4542290144201658,0.20386513622053712,0.19037145942532452,Qwen/Qwen2.5-32B-Instruct-AWQ,results/semeval_1/initial/metrics.json
+semeval,1,followup,0.4549255227303913,0.358648921145535,0.309902759191,Qwen/Qwen2.5-32B-Instruct-AWQ,results/semeval_1/followup/metrics.json
+semeval_qwen3,1,initial,0.4255306509821035,0.3096634059647807,0.2510227527349764,Qwen/Qwen3-32B-AWQ,results/semeval_qwen3_1/initial/metrics.json
+semeval_qwen3,1,followup,0.4672434460474201,0.25704981672285565,0.19642747957876835,Qwen/Qwen3-32B-AWQ,results/semeval_qwen3_1/followup/metrics.json
+nyt,1,initial,0.5194660604477872,0.5696000000000001,0.48348610535857006,Qwen/Qwen2.5-32B-Instruct-AWQ,results/nyt_1/initial/metrics.json
+nyt,1,followup,0.6865321335274949,0.4568,0.47099836308814114,Qwen/Qwen2.5-32B-Instruct-AWQ,results/nyt_1/followup/metrics.json
+fewrel_defon10k,1,initial,0.7199780370568132,0.8048334690001354,0.7357677054449073,"GPT-4o (authors' cached seed examples, gpt-4o-2024-05-13)",results/fewrel_defon10k_1/initial/metrics.json
+fewrel_defon10k,1,followup,0.8373862109818074,0.5985497218830552,0.659011058313934,Qwen/Qwen2.5-32B-Instruct-AWQ,results/fewrel_defon10k_1/followup/metrics.json
+fewrel_defon10k,2,initial,0.6972219207626527,0.7907614299280966,0.6960974929628254,"GPT-4o (authors' cached seed examples, gpt-4o-2024-05-13)",results/fewrel_defon10k_2/initial/metrics.json
+fewrel_defon10k,2,followup,0.7983291940469815,0.6819580111246778,0.7027163296222263,Qwen/Qwen2.5-32B-Instruct-AWQ,results/fewrel_defon10k_2/followup/metrics.json
