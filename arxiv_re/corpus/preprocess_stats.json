@@ -1,0 +1,28 @@
+{
+ "abstracts": 397,
+ "sentences_total": 2947,
+ "sentences_kept_len": 2846,
+ "sentences_with_2plus_mentions": 1384,
+ "candidate_pairs": 3737,
+ "tokens_per_sentence_mean": 28.4,
+ "tokens_per_sentence_median": 27.0,
+ "tokens_per_sentence_min": 8,
+ "tokens_per_sentence_max": 60,
+ "mentions_per_sentence_mean": 1.78,
+ "abstracts_by_category": {
+  "cs.CL": 83,
+  "cs.CV": 80,
+  "cs.IR": 80,
+  "cs.LG": 80,
+  "stat.ML": 74
+ },
+ "date_range": [
+  "2025-01-01",
+  "2026-09-11"
+ ],
+ "filters": {
+  "min_tokens": 8,
+  "max_tokens": 60,
+  "max_pairs_per_sentence": 6
+ }
+}
