@@ -77,15 +77,18 @@ DATASET_SPLITS = {
     "wikizsl_defon": ["1", "2", "3"],
     "semeval": ["1"],   # built by tools/build_semeval_defon.py
     "nyt": ["1"],       # built by tools/build_nyt_defon.py
+    "fewrel_defon10k": ["1", "2"],  # 10k unlabeled pool, built by tools/build_fewrel_10k_pool.py
+    "semeval_qwen3": ["1"],  # same data as semeval_1 (copied json, no cache): generator-LLM comparison
+    "nyt_qwen3": ["1"],      # same data as nyt_1 (copied json, no cache): generator-LLM comparison
 }
 
-# Paper-reported REPaL scores, for side-by-side comparison in aggregate.csv.
-# (F1, averaged over relations & splits.) Fill in / adjust from the paper table.
+# Paper-reported REPaL scores, for side-by-side comparison in aggregate.csv, keyed by (dataset, stage).
+# Source: arXiv 2402.11142v2 (= EMNLP 2024), Table 1, "REPaL (w GPT-4o)", trained on 15p15n initial +
+# 15p15n follow-up instances, i.e. our "followup" stage. The paper's main table has no initial-only
+# number for both datasets, so "initial" rows get no reference. semeval / nyt are not in the paper.
 PAPER_REFERENCE_F1 = {
-    "fewrel_defon": None,
-    "wikizsl_defon": None,
-    "semeval": None,
-    "nyt": None,
+    ("fewrel_defon", "followup"): 0.7461,   # P 78.86 / R 77.28 / F1 74.61
+    ("wikizsl_defon", "followup"): 0.4780,  # P 68.98 / R 47.63 / F1 47.80
 }
 
 
@@ -352,9 +355,9 @@ def write_aggregate(rows: list):
             "precision_mean": p_m, "precision_std": p_s,
             "recall_mean": r_m, "recall_std": r_s,
             "f1_mean": f_m, "f1_std": f_s,
-            "paper_f1": PAPER_REFERENCE_F1.get(dataset),
-            "f1_delta_vs_paper": (round(f_m - PAPER_REFERENCE_F1[dataset], 4)
-                                  if f_m is not None and PAPER_REFERENCE_F1.get(dataset) else None),
+            "paper_f1": PAPER_REFERENCE_F1.get((dataset, stage)),
+            "f1_delta_vs_paper": (round(f_m - PAPER_REFERENCE_F1[(dataset, stage)], 4)
+                                  if f_m is not None and PAPER_REFERENCE_F1.get((dataset, stage)) else None),
         })
 
     fields = ["dataset", "stage", "n_splits", "splits",
@@ -397,6 +400,14 @@ def main():
                     help="keep going if a run fails (default: stop)")
     ap.add_argument("--skip-existing", action="store_true",
                     help="skip a run whose metrics.json already has a chosen_f1")
+    ap.add_argument("--dist-port", type=int, default=None,
+                    help="base port for the distributed-inference rendezvous (initial uses it, followup uses +21). "
+                         "Give parallel run_experiments.py processes different values (e.g. 12345 and 13345): "
+                         "with the shared default they can both grab the same 'free' port and crash with EADDRINUSE.")
+    ap.add_argument("--regex-example-parser", action="store_true",
+                    help="parse LLM-generated examples with the repo's regex parser in every stage (sets "
+                         "run_LLM_json_parser_ex False). For local models that drop <ENT0>..</ENT0> tags when "
+                         "acting as the JSON parser (seen with Qwen3-32B); definitions still use the LLM parser.")
     ap.add_argument("--keep-all-ckpts", action="store_true",
                     help="keep every saved epoch ckpt (the released code's behaviour) and don't "
                          "delete a split's model ckpts once all its stages succeed. Needs "
@@ -475,6 +486,10 @@ def main():
         cfg["output_dir"] = str(out_dir) + os.sep
         if args.seed is not None:
             cfg["seed"] = args.seed
+        if args.regex_example_parser:
+            cfg["run_LLM_json_parser_ex"] = False
+        if args.dist_port is not None:
+            cfg["dist_port"] = args.dist_port + (21 if stage == "followup" else 0)
         if args.keep_all_ckpts:
             cfg["keep_only_dev_chosen_ckpt"] = False
 

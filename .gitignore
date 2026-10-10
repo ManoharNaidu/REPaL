@@ -22,3 +22,7 @@ __pycache__/
 dashboard/
 # scratch file written by src/llm_gen.py JSON parser
 temp.jsonl
+# unreadable (stale file handle) leftovers from a damaged instance copy; originals restored from git
+.hf_cache.corrupt*/
+src.corrupt/
+tools.corrupt/
