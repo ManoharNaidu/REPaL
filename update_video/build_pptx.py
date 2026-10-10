@@ -47,6 +47,29 @@ TERMINAL_BG, TERMINAL_FG, TERMINAL_PROMPT = "0B1020", "D7E0EE", "7FB0FF"
 RADIUS = 0.08
 
 
+# Real values for the transcript's [FILL] blanks, taken from the repository on 2026-10-10:
+#   environment : /venv/main on the current 2-GPU instance (2x RTX 5090, Python 3.12.14, torch 2.11.0+cu128); the earlier
+#                 instance's results/logs/pip_install.log also shows Python 3.12 and torch 2.11.0+cu128. The GPU model is not
+#                 written in the run logs themselves.
+#   NYT         : data/nyt_1/test.json = 2,500 instances, 25 relations (tools/build_nyt_defon.py docstring agrees)
+#   annotation  : arxiv_re/*annotation-sheet*.csv has 100 rows and every label cell is blank -> 0 labelled
+ENV_TEXT = "two NVIDIA RTX 5090 GPUs, Python 3.12, PyTorch 2.11"
+NYT_N, NYT_K = "2,500", "25"
+SUBSTITUTIONS = [   # (transcript text, replacement) applied to the speaker notes
+    ("[FILL: GPU model, Python version, PyTorch version]", ENV_TEXT),
+    ("[FILL: N] sentences and [FILL: K] relations", f"{NYT_N} sentences and {NYT_K} relations"),
+    ("So far I have labelled [FILL: N] sentences.", "The annotation sheet is ready, and labelling starts next."),
+    ("[FILL: partly labelled / ready to label]", "ready to label"),
+]
+RESOLVED_CUE = '[If you have labelled none, replace the "So far I have labelled" sentence with: "The annotation sheet is ready, and labelling starts next."]'
+
+
+def apply_fills(text):
+    for old, new in SUBSTITUTIONS:
+        text = text.replace(old, new)
+    return text.replace(RESOLVED_CUE + "\n\n", "").replace(RESOLVED_CUE, "")
+
+
 def rgb(h):
     return RGBColor.from_string(h)
 
@@ -285,7 +308,7 @@ def build(prs, notes):
     # 1 --- title
     s = add_title_slide(prs, "REPaL: Reproduction and Extension — Zero-Shot Relation Extraction",
                         "COMP8240 Project Update — Manohar Naidu Bheesetti — 2026-10-10")
-    set_notes(s, "Before recording: replace every amber [FILL] box in slides 6, 7, 8, 9.")
+    set_notes(s, "All blanks were filled from the repository on 2026-10-10. Before recording, check slides 6, 7, 8, 9 against your own records.")
 
     # 2 --- introduction
     s = add_content_slide(prs, "Reproducing and Extending REPaL", 2)
@@ -370,43 +393,35 @@ def build(prs, notes):
              [[T("All eight splits finished, using the authors' cached GPT-4o examples.", size=SIZE_BODY, color=MUTED_ON_WHITE)]])
     s.shapes.add_picture(CHART_PNG, I(6.25), I(CONTENT_TOP), width=I(6.48))
     add_text(s, MARGIN_L, 5.95, 3.4, 0.55, [[T("Run on rented cloud GPUs:", size=SIZE_BODY, bold=True)]], anchor=MSO_ANCHOR.MIDDLE)
-    add_placeholder(s, MARGIN_L + 3.45, 5.95, 5.4, 0.55, "[FILL: GPU model, Python, PyTorch]")
+    add_rect(s, MARGIN_L + 3.45, 5.95, 8.68, 0.55, BG_NAVY, rounded=True)
+    add_text(s, MARGIN_L + 3.7, 5.95, 8.3, 0.55, [[T("2\u00d7 NVIDIA RTX 5090  \u00b7  Python 3.12  \u00b7  PyTorch 2.11", size=SIZE_BODY, bold=True, color=TEXT_ON_NAVY)]],
+             anchor=MSO_ANCHOR.MIDDLE)
     set_notes(s, timing("2:45-3:30") + "\n" + notes["2:45-3:30"])
 
     # 7 --- new datasets
     s = add_content_slide(prs, "New datasets", 7)
     cw, gap = 3.93, 0.17
-    chips = [("SemEval-2010 Task 8", "8,851", "sentences · 17 directed relations · “Other” removed"),
-             ("NYT", None, None),
-             ("arXiv — my own dataset", None, "See next slide")]
+    chips = [("SemEval-2010 Task 8", "8,851", "sentences \u00b7 17 directed relations \u00b7 \u201cOther\u201d removed"),
+             ("NYT", NYT_N, f"sentences \u00b7 {NYT_K} relations"),
+             ("arXiv \u2014 my own dataset", None, "See next slide")]
     for i, (name, hero, sub) in enumerate(chips):
         x = MARGIN_L + i * (cw + gap)
-        add_rect(s, x, CONTENT_TOP, cw, 2.2, PANEL_LIGHT, rounded=True)
-        add_rect(s, x, CONTENT_TOP + 0.25, 0.07, 1.7, ACCENT)
+        add_rect(s, x, CONTENT_TOP, cw, 2.3, PANEL_LIGHT, rounded=True)
+        add_rect(s, x, CONTENT_TOP + 0.25, 0.07, 1.8, ACCENT)
         add_text(s, x + 0.3, CONTENT_TOP + 0.12, cw - 0.45, 0.5, [[T(name, size=SIZE_BODY, bold=True, color=ACCENT)]])
         if hero:
-            add_text(s, x + 0.3, CONTENT_TOP + 0.6, cw - 0.45, 0.85, [[T(hero, size=SIZE_HERO, bold=True, color=AMBER)]],
+            add_text(s, x + 0.3, CONTENT_TOP + 0.65, cw - 0.45, 0.9, [[T(hero, size=SIZE_HERO, bold=True, color=AMBER)]],
                      anchor=MSO_ANCHOR.MIDDLE)
-            add_text(s, x + 0.3, CONTENT_TOP + 1.45, cw - 0.45, 0.7, [[T(sub, size=SIZE_LABEL, color=MUTED_ON_WHITE)]])
-        elif name == "NYT":
-            add_placeholder(s, x + 0.3, CONTENT_TOP + 0.7, 1.75, 0.5, "[FILL: N]")
-            add_text(s, x + 2.1, CONTENT_TOP + 0.7, cw - 2.2, 0.5, [[T("sentences", size=SIZE_BODY, color=TEXT_ON_WHITE)]], anchor=MSO_ANCHOR.MIDDLE)
-            add_placeholder(s, x + 0.3, CONTENT_TOP + 1.35, 1.75, 0.5, "[FILL: K]")
-            add_text(s, x + 2.1, CONTENT_TOP + 1.35, cw - 2.2, 0.5, [[T("relations", size=SIZE_BODY, color=TEXT_ON_WHITE)]], anchor=MSO_ANCHOR.MIDDLE)
+            add_text(s, x + 0.3, CONTENT_TOP + 1.55, cw - 0.45, 0.7, [[T(sub, size=SIZE_LABEL, color=MUTED_ON_WHITE)]])
         else:
-            add_text(s, x + 0.3, CONTENT_TOP + 0.75, cw - 0.45, 1.2, [[T(sub, size=SIZE_BODY + 2, color=TEXT_ON_WHITE)]])
-    # one-line SemEval example (real instance from data/semeval_1/test.json, Cause-Effect(e1,e2))
-    add_text(s, MARGIN_L, 4.1, CONTENT_W, 0.6,
-             [[T("SemEval example:  ", size=SIZE_BODY, bold=True, color=MUTED_ON_WHITE),
-               T("“financial ", size=SIZE_BODY), T("stress", size=SIZE_BODY, bold=True, color=ACCENT),
-               T(" is one of the main causes of ", size=SIZE_BODY), T("divorce", size=SIZE_BODY, bold=True, color=ACCENT),
-               T(".”  → cause-effect", size=SIZE_BODY, color=MUTED_ON_WHITE)]], anchor=MSO_ANCHOR.MIDDLE)
-    add_rule(s, MARGIN_L, SLIDE_W - MARGIN_R, 4.85, color="C9D1DC", width=0.75)
-    res = [("19 → 31", "SemEval F1, with feedback"), ("≈ 47", "NYT F1"), ("Qwen2.5", "local model replaces GPT-4o")]
+            add_text(s, x + 0.3, CONTENT_TOP + 0.85, cw - 0.45, 1.2, [[T(sub, size=SIZE_BODY + 2, color=TEXT_ON_WHITE)]])
+    add_text(s, MARGIN_L, 4.3, CONTENT_W, 0.4, [[T("RESULTS (F1, %)", size=SIZE_LABEL, bold=True, color=ACCENT)]])
+    add_rule(s, MARGIN_L, SLIDE_W - MARGIN_R, 4.75, color="C9D1DC", width=0.75)
+    res = [("19 \u2192 31", "SemEval F1, with feedback"), ("\u2248 47", "NYT F1"), ("Qwen2.5", "local model replaces GPT-4o")]
     for i, (v, l) in enumerate(res):
         x = MARGIN_L + i * (cw + gap)
-        add_text(s, x, 5.0, cw, 0.85, [[T(v, size=SIZE_HERO - 8, bold=True, color=AMBER)]], anchor=MSO_ANCHOR.MIDDLE)
-        add_text(s, x, 5.85, cw, 0.5, [[T(l, size=SIZE_LABEL, color=MUTED_ON_WHITE)]])
+        add_text(s, x, 4.95, cw, 0.95, [[T(v, size=SIZE_HERO, bold=True, color=AMBER)]], anchor=MSO_ANCHOR.MIDDLE)
+        add_text(s, x, 5.95, cw, 0.5, [[T(l, size=SIZE_LABEL, color=MUTED_ON_WHITE)]])
     set_notes(s, timing("3:30-4:20") + "\n" + notes["3:30-4:20"])
 
     # 8 --- own dataset
@@ -420,17 +435,15 @@ def build(prs, notes):
              [[T("evaluated_on · outperforms · achieves_result · builds_on · applied_to_task · uses_component",
                  size=SIZE_BODY, bold=True)]], anchor=MSO_ANCHOR.MIDDLE)
     add_rule(s, MARGIN_L, SLIDE_W - MARGIN_R, 4.95, color="C9D1DC", width=0.75)
-    add_text(s, MARGIN_L, 5.1, 3.2, 0.6, [[T("Annotation so far:", size=SIZE_BODY, bold=True)]], anchor=MSO_ANCHOR.MIDDLE)
-    add_placeholder(s, MARGIN_L + 3.2, 5.1, 2.6, 0.6, "[FILL: N labelled]")
-    add_text(s, MARGIN_L + 5.95, 5.1, 6.2, 0.6, [[T("sentences", size=SIZE_BODY)]], anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, MARGIN_L, 5.85, CONTENT_W, 0.6,
-             [[T("If none yet: “The annotation sheet is ready, and labelling starts next.”", size=SIZE_BODY, italic=True,
-                 color=MUTED_ON_WHITE)]], anchor=MSO_ANCHOR.MIDDLE)
+    add_text(s, MARGIN_L, 5.1, 3.4, 0.9, [[T("Annotation so far:", size=SIZE_BODY, bold=True)]], anchor=MSO_ANCHOR.MIDDLE)
+    add_text(s, MARGIN_L + 3.4, 5.1, 2.6, 0.9, [[T("0 / 100", size=48, bold=True, color=AMBER)]], anchor=MSO_ANCHOR.MIDDLE)
+    add_text(s, MARGIN_L + 6.1, 5.1, 6.0, 0.9, [[T("sentences labelled. The sheet is ready, and labelling starts next.", size=SIZE_BODY,
+                                                  color=MUTED_ON_WHITE)]], anchor=MSO_ANCHOR.MIDDLE)
     set_notes(s, timing("4:20-4:50") + "\n" + notes["4:20-4:50"])
 
     # 9 --- wrap-up (navy)
     s = add_content_slide(prs, "Wrap-up", 9, dark=True)
-    rows = ["Replication works", "Two extra datasets are done", "Own dataset is built and"]
+    rows = ["Replication works", "Two extra datasets are done", "Own dataset is built and ready to label"]
     y = CONTENT_TOP + 0.1
     for i, text in enumerate(rows):
         add_rect(s, MARGIN_L, y, CONTENT_W, 0.95, PANEL_NAVY, rounded=True)
@@ -438,9 +451,6 @@ def build(prs, notes):
         add_text(s, MARGIN_L + 0.3, y + 0.24, 0.47, 0.47, [[T(str(i + 1), size=SIZE_LABEL, bold=True, color="FFFFFF")]],
                  align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
         add_text(s, MARGIN_L + 1.05, y, 7.0, 0.95, [[T(text, size=SIZE_BODY + 4, color=TEXT_ON_NAVY)]], anchor=MSO_ANCHOR.MIDDLE)
-        if i == 2:
-            x0 = MARGIN_L + 1.05 + text_width_in(text, SIZE_BODY + 4) + 0.3
-            add_placeholder(s, x0, y + 0.18, 5.0, 0.6, "[FILL: partly labelled / ready to label]", size=SIZE_BODY - 2)
         y += 1.15
     add_rule(s, MARGIN_L, SLIDE_W - MARGIN_R, 5.55)
     add_text(s, MARGIN_L, 5.7, CONTENT_W, 0.7, [[T("Next: ", size=SIZE_BODY + 2, bold=True, color=ACCENT),
@@ -470,8 +480,26 @@ def build(prs, notes):
     set_notes(s, "TIMING: backup — not for the 5-minute recording\n" + notes["ifasked"])
 
 
-# ----------------------------------------------------------------------------- self-check
-def verify(prs, notes):
+# ----------------------------------------------------------------------------- filled transcript + self-check
+SECTION_ORDER = ["0:00-0:30", "0:30-1:15", "1:15-2:45", "2:45-3:30", "3:30-4:20", "4:20-4:50", "4:50-5:00"]
+SECTION_TITLES = {"0:00-0:30": "Introduction and why this paper", "0:30-1:15": "The paper's datasets",
+                  "1:15-2:45": "Architecture, code, and a run", "2:45-3:30": "Replication status", "3:30-4:20": "New datasets",
+                  "4:20-4:50": "Building my own dataset: progress", "4:50-5:00": "Wrap-up"}
+FILLED_TRANSCRIPT = os.path.join(ROOT, "2026-10-10-video-transcript-v3-filled.md")
+
+
+def write_filled_transcript(notes):
+    """Clean reading copy: the v3 spoken sections with the [FILL] values filled in (v3 itself is not modified)."""
+    out = ["# Video transcript v3, values filled in (reading copy)", "",
+           "Generated by `update_video/build_pptx.py` from `2026-10-10-video-transcript-v3.md`. Only the four blanks changed (and the now-resolved 'if you have labelled none' instruction was removed);",
+           "the optional lines in [square brackets] are left for you to decide. The same text is in the slides' speaker notes.", ""]
+    for k in SECTION_ORDER:
+        out += [f"## {k}  {SECTION_TITLES[k]}", notes[k], ""]
+    open(FILLED_TRANSCRIPT, "w", encoding="utf-8").write("\n".join(out))
+
+
+def verify(prs, notes, raw):
+    import difflib
     ok_all = True
 
     def check(label, cond, detail=""):
@@ -480,38 +508,35 @@ def verify(prs, notes):
         print(("PASS " if cond else "FAIL ") + label + (f"  [{detail}]" if detail else ""))
 
     slides = list(prs.slides)
+    body = lambda n: slides[n - 1].notes_slide.notes_text_frame.text.split("\n", 1)[1]
     check("slide count is 10", len(slides) == 10, str(len(slides)))
-    titles = []
-    for s in slides:
+    for i, s in enumerate(slides, 1):
         t = [sh.text_frame.text for sh in s.shapes if sh.has_text_frame and sh.text_frame.text.strip()]
-        titles.append(t[0] if t else "?")
-    for i, t in enumerate(titles, 1):
-        print(f"  slide {i:2d}: {t}")
+        print(f"  slide {i:2d}: {t[0] if t else '?'}")
 
-    # notes copied verbatim from the transcript
-    expect = {2: "0:00-0:30", 3: "0:30-1:15", 6: "2:45-3:30", 7: "3:30-4:20", 8: "4:20-4:50", 9: "4:50-5:00"}
-    for n, key in expect.items():
-        body = slides[n - 1].notes_slide.notes_text_frame.text.split("\n", 1)[1]
-        check(f"slide {n} notes == transcript section {key}", body == notes[key])
-    arch = (slides[3].notes_slide.notes_text_frame.text.split("\n", 1)[1] + "\n" + slides[4].notes_slide.notes_text_frame.text.split("\n", 1)[1])
+    # notes == filled transcript sections; and show every line that differs from the v3 text
+    for n, key in {2: "0:00-0:30", 3: "0:30-1:15", 6: "2:45-3:30", 7: "3:30-4:20", 8: "4:20-4:50", 9: "4:50-5:00"}.items():
+        check(f"slide {n} notes == transcript section {key} (with fills)", body(n) == notes[key])
     sec = notes["1:15-2:45"]; cut = sec.index("[Terminal:")
     check("slides 4+5 notes == transcript section 1:15-2:45 (split at the terminal cue)",
-          slides[3].notes_slide.notes_text_frame.text.split("\n", 1)[1] == sec[:cut].rstrip("\n")
-          and slides[4].notes_slide.notes_text_frame.text.split("\n", 1)[1] == sec[cut:], "")
-    check("slide 10 notes == 'If asked' list", slides[9].notes_slide.notes_text_frame.text.split("\n", 1)[1] == notes["ifasked"])
-    check("slide 1 notes carry the before-recording line", "replace every amber [FILL] box in slides 6, 7, 8, 9" in slides[0].notes_slide.notes_text_frame.text)
+          body(4) == sec[:cut].rstrip("\n") and body(5) == sec[cut:])
+    check("slide 10 notes == 'If asked' list", body(10) == notes["ifasked"])
+    print("  --- lines that differ from the v3 transcript (the only edits made to the spoken text) ---")
+    for k in SECTION_ORDER:
+        for d in difflib.unified_diff(raw[k].split("\n"), notes[k].split("\n"), lineterm="", n=0):
+            if d[:1] in "+-" and d[:3] not in ("+++", "---"):
+                print(f"  [{k}] {d[:170]}")
 
-    # FILL placeholders
-    fill_re = re.compile(r"\[FILL:[^\]]*\]")
-    for n in (6, 7, 8, 9):
-        shp = [sh for sh in slides[n - 1].shapes if sh.name == "FILL_PLACEHOLDER"]
-        notes_fill = fill_re.findall(slides[n - 1].notes_slide.notes_text_frame.text)
-        print(f"  slide {n}: on-slide placeholders {[x.text_frame.text for x in shp]} | tokens in notes {notes_fill}")
-        check(f"slide {n} has amber placeholder(s)", len(shp) >= 1)
-    transcript_tokens = fill_re.findall("\n".join(notes[k] for k in notes if k != "ifasked"))
-    in_notes = fill_re.findall("\n".join(sl.notes_slide.notes_text_frame.text for sl in slides))
-    check("every [FILL: ...] token in the transcript is in the notes", sorted(transcript_tokens) == sorted(in_notes),
-          f"{len(transcript_tokens)} in transcript, {len(in_notes)} in notes")
+    # no placeholders left anywhere
+    left = [(i, sh.text_frame.text) for i, s in enumerate(slides, 1) for sh in s.shapes if sh.has_text_frame and "[FILL" in sh.text_frame.text]
+    left += [(i, "notes") for i, s in enumerate(slides, 1) if "[FILL" in s.notes_slide.notes_text_frame.text]
+    check("no [FILL] left on any slide or in any notes", not left, str(left))
+    texts = {i: " ".join(sh.text_frame.text for sh in s.shapes if sh.has_text_frame) for i, s in enumerate(slides, 1)}
+    check("slide 6 shows the environment", all(x in texts[6] for x in ("RTX 5090", "Python 3.12", "PyTorch 2.11")))
+    check("slide 7 shows NYT 2,500 sentences / 25 relations and no SemEval example",
+          "2,500" in texts[7] and "25 relations" in texts[7] and "divorce" not in texts[7])
+    check("slide 8 shows 0 / 100", "0 / 100" in texts[8])
+    check("slide 9 says ready to label", "ready to label" in texts[9])
 
     # nothing sensitive on slides, min font size
     bad = re.compile(r"https?://|www\.|github\.com|\b\d{1,3}(\.\d{1,3}){3}\b|\btoken\b|OPEN_BUTTON", re.I)
@@ -528,13 +553,9 @@ def verify(prs, notes):
     check("no URL / IP / token text on any slide", not leaks, str(leaks))
     check("no text below 16 pt on slides", not small, str(small[:3]))
 
-    # spoken word count (cue lines in [] and TIMING lines excluded)
-    words = 0
-    for sl in slides[1:9]:
-        for ln in sl.notes_slide.notes_text_frame.text.split("\n"):
-            if ln.strip() and not ln.startswith("[") and not ln.startswith("TIMING:"):
-                words += len(ln.split())
-    print(f"  spoken words in notes (slides 2-9): {words}  (transcript says about 640)")
+    words = sum(len(ln.split()) for sl in slides[1:9] for ln in sl.notes_slide.notes_text_frame.text.split("\n")
+                if ln.strip() and not ln.startswith("[") and not ln.startswith("TIMING:"))
+    print(f"  spoken words in notes (slides 2-9): {words}")
     print("ALL CHECKS PASSED" if ok_all else "SOME CHECKS FAILED")
     return ok_all
 
@@ -542,14 +563,16 @@ def verify(prs, notes):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--refresh-chart", action="store_true")
     args = ap.parse_args()
-    notes = parse_transcript(TRANSCRIPT)
+    raw = parse_transcript(TRANSCRIPT)
+    notes = {k: apply_fills(v) for k, v in raw.items()}
     add_bar_chart(CHART_PNG, refresh=args.refresh_chart)
     prs = Presentation()
     prs.slide_width, prs.slide_height = I(SLIDE_W), I(SLIDE_H)
     build(prs, notes)
     prs.save(OUT_PPTX)
     print("wrote", OUT_PPTX)
-    sys.exit(0 if verify(Presentation(OUT_PPTX), notes) else 1)
+    write_filled_transcript(notes)
+    sys.exit(0 if verify(Presentation(OUT_PPTX), notes, raw) else 1)
 
 
 if __name__ == "__main__":
