@@ -1,6 +1,6 @@
 # Video transcript: COMP8240 project update (target 5:00)
 
-About 725 spoken words, which fits 5 minutes at 145-150 words per minute. Times follow the Novel-project structure in the Update brief.
+About 650 spoken words: roughly 4.4 minutes at a steady 148 words per minute, which leaves about 30 seconds for pauses and for the terminal output to appear on screen. Time yourself once and adjust. Times follow the Novel-project structure in the Update brief.
 Numbers are verified against `2026-10-10-repal-results.xlsx`. Square brackets are on-screen cues or things for you to fill in; do not read them out.
 
 **Before you record**
