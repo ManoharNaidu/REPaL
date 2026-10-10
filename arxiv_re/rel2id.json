@@ -1,0 +1,1 @@
+{"evaluated_on(e1,e2)": 0, "evaluated_on(e2,e1)": 1, "outperforms(e1,e2)": 2, "outperforms(e2,e1)": 3, "achieves_result(e1,e2)": 4, "achieves_result(e2,e1)": 5, "builds_on(e1,e2)": 6, "builds_on(e2,e1)": 7, "applied_to_task(e1,e2)": 8, "applied_to_task(e2,e1)": 9, "uses_component(e1,e2)": 10, "uses_component(e2,e1)": 11}

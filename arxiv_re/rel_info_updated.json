@@ -1,0 +1,98 @@
+{
+ "evaluated_on(e1,e2)": {
+  "relation": "evaluated_on(e1,e2)",
+  "relation_id": 0,
+  "relation_name": "evaluated_on(e1,e2)",
+  "wikidata_description": "A method or model is tested or evaluated on a dataset or benchmark.",
+  "typed_desc_prompt": "<ENT0> (a method or model) is evaluated on <ENT1> (a dataset or benchmark)",
+  "prompts": []
+ },
+ "evaluated_on(e2,e1)": {
+  "relation": "evaluated_on(e2,e1)",
+  "relation_id": 1,
+  "relation_name": "evaluated_on(e2,e1)",
+  "wikidata_description": "A method or model is tested or evaluated on a dataset or benchmark.",
+  "typed_desc_prompt": "<ENT1> (a method or model) is evaluated on <ENT0> (a dataset or benchmark)",
+  "prompts": []
+ },
+ "outperforms(e1,e2)": {
+  "relation": "outperforms(e1,e2)",
+  "relation_id": 2,
+  "relation_name": "outperforms(e1,e2)",
+  "wikidata_description": "A method achieves better results than a baseline or an earlier method.",
+  "typed_desc_prompt": "<ENT0> (a method) outperforms <ENT1> (a baseline or an earlier method)",
+  "prompts": []
+ },
+ "outperforms(e2,e1)": {
+  "relation": "outperforms(e2,e1)",
+  "relation_id": 3,
+  "relation_name": "outperforms(e2,e1)",
+  "wikidata_description": "A method achieves better results than a baseline or an earlier method.",
+  "typed_desc_prompt": "<ENT1> (a method) outperforms <ENT0> (a baseline or an earlier method)",
+  "prompts": []
+ },
+ "achieves_result(e1,e2)": {
+  "relation": "achieves_result(e1,e2)",
+  "relation_id": 4,
+  "relation_name": "achieves_result(e1,e2)",
+  "wikidata_description": "A method obtains a specific performance result, such as a score or a metric value.",
+  "typed_desc_prompt": "<ENT0> (a method) achieves <ENT1> (a performance score or metric value)",
+  "prompts": []
+ },
+ "achieves_result(e2,e1)": {
+  "relation": "achieves_result(e2,e1)",
+  "relation_id": 5,
+  "relation_name": "achieves_result(e2,e1)",
+  "wikidata_description": "A method obtains a specific performance result, such as a score or a metric value.",
+  "typed_desc_prompt": "<ENT1> (a method) achieves <ENT0> (a performance score or metric value)",
+  "prompts": []
+ },
+ "builds_on(e1,e2)": {
+  "relation": "builds_on(e1,e2)",
+  "relation_id": 6,
+  "relation_name": "builds_on(e1,e2)",
+  "wikidata_description": "A method is built on, extends or modifies an earlier method.",
+  "typed_desc_prompt": "<ENT0> (a new method) builds on or extends <ENT1> (an earlier method)",
+  "prompts": []
+ },
+ "builds_on(e2,e1)": {
+  "relation": "builds_on(e2,e1)",
+  "relation_id": 7,
+  "relation_name": "builds_on(e2,e1)",
+  "wikidata_description": "A method is built on, extends or modifies an earlier method.",
+  "typed_desc_prompt": "<ENT1> (a new method) builds on or extends <ENT0> (an earlier method)",
+  "prompts": []
+ },
+ "applied_to_task(e1,e2)": {
+  "relation": "applied_to_task(e1,e2)",
+  "relation_id": 8,
+  "relation_name": "applied_to_task(e1,e2)",
+  "wikidata_description": "A method is applied to a task, a problem or an application domain.",
+  "typed_desc_prompt": "<ENT0> (a method) is applied to <ENT1> (a task, a problem or an application domain)",
+  "prompts": []
+ },
+ "applied_to_task(e2,e1)": {
+  "relation": "applied_to_task(e2,e1)",
+  "relation_id": 9,
+  "relation_name": "applied_to_task(e2,e1)",
+  "wikidata_description": "A method is applied to a task, a problem or an application domain.",
+  "typed_desc_prompt": "<ENT1> (a method) is applied to <ENT0> (a task, a problem or an application domain)",
+  "prompts": []
+ },
+ "uses_component(e1,e2)": {
+  "relation": "uses_component(e1,e2)",
+  "relation_id": 10,
+  "relation_name": "uses_component(e1,e2)",
+  "wikidata_description": "A method uses a technique, a module or a resource as one of its parts.",
+  "typed_desc_prompt": "<ENT0> (a method) uses <ENT1> (a technique, a module or a resource as a component)",
+  "prompts": []
+ },
+ "uses_component(e2,e1)": {
+  "relation": "uses_component(e2,e1)",
+  "relation_id": 11,
+  "relation_name": "uses_component(e2,e1)",
+  "wikidata_description": "A method uses a technique, a module or a resource as one of its parts.",
+  "typed_desc_prompt": "<ENT1> (a method) uses <ENT0> (a technique, a module or a resource as a component)",
+  "prompts": []
+ }
+}
