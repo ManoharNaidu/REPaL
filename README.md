@@ -39,6 +39,19 @@ The codes are written in Python 3.8 (verified working on Python 3.11 as well). P
 pip install -r requirements.txt
 ```
 
+### Environment note
+
+`requirements.txt` keeps `numpy<2` because spaCy 3.7 / thinc 8.2 need numpy 1.x. Python 3.11 is the recommended version for a new environment. The reported experiments were run on Python 3.12 (`run.log` paths). Do not pin `torch`: the GPU decides the build (see `CLAUDE.md`).
+
+### Quick run
+
+```
+pip install -r requirements.txt
+python run_experiments.py --list --data-root reproduce_main_data/data     # show planned runs
+python run_experiments.py --datasets fewrel_defon --splits 1 --stages initial --data-root reproduce_main_data/data
+python run_experiments.py --aggregate-only                                # rebuild results/aggregate.csv
+```
+
 ### Recommended GPU specification
 
 The `roberta-large-mnli` backbone is fine-tuned in fp32 by default (no mixed precision), which uses roughly 5.6GB of fixed VRAM per relation (model weights + Adam optimizer states + gradients) before any activation memory. The original `scripts/run_init.sh` / `scripts/run.sh` batch sizes (`--eval_batch_size 3600`, `--unlabel_infer_batch_size 4200`) assume 4 large (>=24GB) GPUs.
@@ -70,7 +83,7 @@ Extract the `reproduce_main_data.tar.gz` file (DefOn-FewRel and DefOn-WikiZSL fo
 ```
 tar -xf reproduce_main_data.tar.gz
 ```
-and place the corresponding `data` folder under the `./reproduce/main`. 
+and place the extracted `reproduce_main_data/` folder in the repository root, so that the splits are at `reproduce_main_data/data/<dataset>_<split>/`. 
 
 You can adjust the `--dataset_dir` for running experiments over data in your specified folder. 
 
@@ -153,9 +166,9 @@ $CODE_DIR
 ├── figures
 ├── README.md
 ├── reproduce
-│   ├── main
-│   │   └── data
 │   └── README.md
+├── reproduce_main_data   # authors' cached GPT-4o bundle (git-ignored)
+│   └── data
 ├── requirements.txt
 ├── results               # run_experiments.py output: summary.csv, aggregate.csv, per-run logs
 ├── run_experiments.py    # experiment driver (replaces the old scripts/run_init.sh, run.sh)
