@@ -135,5 +135,19 @@ Local generators were **Qwen2.5-32B-Instruct-AWQ** (semeval, nyt, 10k followups)
 - Citations: 30 (Semantic Scholar API, 2026-11-09). CORE: EMNLP ranked A* under ICORE2026 (portal.core.edu.au, 2026-11-09).
 - arXiv terms (`info.arxiv.org/help/api/tou.html`, 2026-11-09): descriptive metadata, explicitly including title and abstract, may be used under CC0 1.0.
 - arXiv corpus: 397 abstracts; 2,947 sentences, 2,846 kept; 1,384 with 2+ mentions; 3,737 candidate pairs (`arxiv_re/corpus/preprocess_stats.json`). 6 relations x 2 directions. Annotation sheets: 100 rows each, 0 filled label cells in both.
-- Not done: arXiv annotation, kappa, REPaL on arXiv, LLM-as-a-judge, BioCreative V CDR (reason: not completed within the project timeline; CONFIRM WITH USER).
+- Not done: arXiv annotation, kappa, REPaL on arXiv, LLM-as-a-judge. BioCreative V CDR was run on 2026-11-09 (section 9).
 - UNVERIFIED: Australian Code wording (nhmrc.gov.au returned HTTP 403 to automated access).
+
+## 9. BioCreative V CDR (added 2026-11-09; source `results/cdr_run/cdr_1/<stage>/run.log` lines "Chosen results for CID")
+
+| relation | stage | P | R | F1 | generator LLM | pool | exit | minutes |
+|---|---|---|---|---|---|---|---|---|
+| CID | initial | 64.95 | 10.27 | 17.73 | Qwen2.5-32B-Instruct-AWQ | 9,672 | 0 | 11 |
+| CID | followup | 61.33 | 8.53 | 14.97 | Qwen2.5-32B-Instruct-AWQ | 9,672 | 0 | 11 |
+
+- Report CID only. `metrics.json`/`aggregate.csv` show the CID + NOT_CID average (F1 9.19 initial, 12.11 followup); NOT_CID exists only to supply negatives.
+- Data: `bigbio/bc5cdr` `CDR_Data.zip`, SHA256 0a359a7f038d283a7b05b084fa73de014e7410e1f5d7034bf3fd01f016fc2444. Built by `tools/build_cdr_defon.py`. Licence listed as "other": check before redistributing.
+- Sizes: test CID 1,891, NOT_CID 3,097; pool 9,672 from train + dev documents (not transductive). Intra-sentence only, labels inherited from document-level CID.
+- Trivial baseline: CID is 37.9% of test pairs, so always-positive F1 is about 55 (computed, not run).
+- Environment: Python 3.12.15, torch 2.15.0+cu132, transformers 4.43.3, vLLM 0.31.0, GPU 0 for LLM and GPU 1 for training (2x RTX 5090), seed 3, 1 split.
+- First attempt failed on a full disk before any metric (`results/cdr_run_attempt1_diskfull/`); its Qwen seed examples were reused by the successful run.

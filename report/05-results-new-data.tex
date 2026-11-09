@@ -20,6 +20,9 @@ Initial & 57.18 & 34.59 & 35.67 \\
 \multicolumn{4}{l}{\emph{NYT, Qwen2.5-32B}} \\
 Initial & 51.95 & 56.96 & 48.35 \\
 Followup & 68.65 & 45.68 & 47.10 \\
+\multicolumn{4}{l}{\emph{CDR (CID only), Qwen2.5-32B}} \\
+Initial & 64.95 & 10.27 & 17.73 \\
+Followup & 61.33 & 8.53 & 14.97 \\
 \bottomrule
 \end{tabular}
 \caption{Results on existing new datasets. The GPT-4o SemEval run has no followup stage because credits ran out.}
@@ -32,8 +35,10 @@ A plausible cause is a mismatch between synthetic and real data. Real SemEval en
 
 \paragraph{NYT.} NYT reaches 47.10, close to WikiZSL (45.95), with a Qwen2.5 generator. Feedback shifted the balance from recall to precision and lowered F1 slightly.
 
-\paragraph{Effect of feedback.} Followup improved on initial for FewRel (+4.75) and SemEval-Qwen2.5 (+11.95) but not WikiZSL ($-$3.20), NYT ($-$1.25), or SemEval-Qwen3 ($-$5.46). In the single-split cases, the differences may be within run-to-run variation, which I could not measure.
+\paragraph{CDR.} CID reached F1 17.73 at the initial stage and 14.97 at followup, run on 2026-11-09 with Python 3.12.15, torch 2.15.0, and Qwen2.5 served by vLLM 0.31.0. The model is conservative, with precision above 60\% and recall near 10\%. CID makes up 37.9\% of test pairs, so an always-positive classifier would score about 55 F1 (computed from the class balance, not run). REPaL's CID model is therefore far below this trivial baseline. Synthetic seeds are clean statements of causation, such as ``\ldots\ can induce gastrointestinal bleeding'', whereas CDR positives are inherited from document-level labels and often do not state causation in the sentence. This mismatch is a plausible explanation that I did not test. The scores come from the sentence-level adaptation and should not be compared with published document-level CDR results.
 
-\paragraph{Relation to the replication.} REPaL's performance depends strongly on the dataset. Scores on the new data are not comparable with the replication as a clean test of generalisation, for three reasons: the generators differ (GPT-4o against Qwen), the SemEval and NYT evaluations are transductive, and each has one split and one seed. The results do show that definitions alone do not guarantee transfer: SemEval's short, abstract definitions and single-noun entities were hard for the pipeline, even with GPT-4o seeds.
+\paragraph{Effect of feedback.} Followup improved on initial for FewRel (+4.75) and SemEval-Qwen2.5 (+11.95) but not WikiZSL ($-$3.20), NYT ($-$1.25), SemEval-Qwen3 ($-$5.46), or CDR ($-$2.76). In the single-split cases, the differences may be within run-to-run variation, which I could not measure.
 
-\paragraph{Absent results.} There are \textbf{no results for the arXiv dataset}, because no gold labels exist and REPaL was not run on it. The planned \textbf{LLM-as-a-judge evaluation was not carried out}, so no judge scores or agreement figures exist. The BioCreative V CDR dataset was not completed within the project timeline. The per-iteration saturation analysis, a stretch goal, was also not done.
+\paragraph{Relation to the replication.} REPaL's performance depends strongly on the dataset. Scores on the new data are not comparable with the replication as a clean test of generalisation, for three reasons: the generators differ (GPT-4o against Qwen), the SemEval and NYT evaluations are transductive, CDR is a sentence-level adaptation with document-inherited labels, and each has one split and one seed. The results do show that definitions alone do not guarantee transfer: SemEval's short, abstract definitions and single-noun entities were hard for the pipeline, even with GPT-4o seeds.
+
+\paragraph{Absent results.} There are \textbf{no results for the arXiv dataset}, because no gold labels exist and REPaL was not run on it. The planned \textbf{LLM-as-a-judge evaluation was not carried out}, so no judge scores or agreement figures exist. The per-iteration saturation analysis, a stretch goal, was also not done.

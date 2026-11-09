@@ -1,7 +1,7 @@
 \section{Construction of New Data}
 \label{sec:newdata}
 
-The proposal named SemEval-2010 Task 8 and BioCreative V CDR as existing datasets, and a newly built scientific-literature resource. BioCreative V CDR was not completed within the project timeline. NYT was added as a second existing dataset.
+The proposal named SemEval-2010 Task 8 and BioCreative V CDR as existing datasets, and a newly built scientific-literature resource. I built all three, and also added NYT as a further existing dataset.
 
 \subsection{SemEval-2010 Task 8}
 SemEval-2010 Task 8 \citep{hendrickx2010semeval} labels the relation between two nominals. I obtained it through FewRel 2.0's \texttt{val\_semeval.json} \citep{gao2019fewrel}. The builder script removes the 1,864 ``Other'' instances and the 2 instances of Entity-Destination(e2,e1), leaving 8,851 instances and 17 directed relations (the proposal's table listed 19). Definitions are the task's guideline sentences, and a template makes each one direction-aware. Removing ``Other'' makes this easier in that respect than the official 19-way task.
@@ -21,6 +21,17 @@ Head: \emph{Williams International}; tail: \emph{jet engines}, in a sentence abo
 \end{quote}
 
 \paragraph{Transductive construction.} For both datasets the builders write the \emph{same} test instances, with the relation grouping removed, as the unlabelled pool: 8,851 of 8,851 (SemEval) and 2,500 of 2,500 (NYT) pool instances are test instances. Labels are hidden, but pool-based mining and feedback see the test sentences. Test--pool overlap also exists in the released data, but is far smaller: 43.7\% in FewRel split 1, 5.9--6.7\% in splits 2--5, and under 1\% in WikiZSL. SemEval and NYT scores should therefore be read as transductive, and are probably optimistic relative to an unseen-sentence evaluation.
+
+\subsection{BioCreative V CDR}
+CDR \citep{li2016biocreative} annotates chemical and disease mentions in PubMed abstracts, with one document-level relation between concepts, chemical-induced disease (CID). I obtained the official files from the \texttt{bigbio/bc5cdr} release. REPaL is sentence-level and needs other relations as negatives, so the adaptation differs substantially from the official task. Candidates are chemical--disease mention pairs in the same sentence. A pair is labelled CID if the document's gold annotations link the two MeSH identifiers, and otherwise NOT\_CID. CID pairs that never share a sentence are excluded, and because labels are inherited from the document, some positive sentences may not state the relation.
+
+The test set comes from the official test documents (1,891 CID and 3,097 NOT\_CID pairs). The unlabelled pool comes from the official training and development documents (9,672 pairs), so unlike SemEval and NYT this evaluation is \emph{not} transductive. NOT\_CID exists only to supply negatives, so I report CID only.
+
+\begin{quote}\small
+\textbf{CID.} Definition: \snip{<ENT0> (a chemical or drug) induces or causes <ENT1> (a disease or adverse condition)}.
+Sentence: ``We present a case of yellow phosphorus poisoning in which a patient presented with florid clinical features of cholestasis \ldots''
+Head: \emph{phosphorus}; tail: \emph{cholestasis}.
+\end{quote}
 
 \subsection{New arXiv corpus}
 This resource is intended to test REPaL on scientific text. Its \emph{collection and preprocessing are complete; its annotation is not}.

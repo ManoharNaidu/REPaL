@@ -26,7 +26,7 @@
 \maketitle
 
 \begin{abstract}
-REPaL trains a relation extractor from only a natural-language relation definition and an unlabelled corpus. I replicated it on the authors' DefOn-FewRel and DefOn-WikiZSL splits using their cached GPT-4o synthesis. Followup F1 was 69.62 on FewRel (paper: 74.61) and 45.95 on WikiZSL (paper: 47.80). I then applied it to SemEval-2010 Task 8 and NYT with locally served Qwen models, reaching 30.99 and 47.10 respectively in single-split runs. I also collected a new arXiv corpus with a six-relation schema and blank annotation sheets. The arXiv annotation, inter-annotator agreement, the REPaL run on arXiv, and the planned LLM-as-a-judge evaluation were not completed, and no results for them are reported.
+REPaL trains a relation extractor from only a natural-language relation definition and an unlabelled corpus. I replicated it on the authors' DefOn-FewRel and DefOn-WikiZSL splits using their cached GPT-4o synthesis. Followup F1 was 69.62 on FewRel (paper: 74.61) and 45.95 on WikiZSL (paper: 47.80). I then applied it to SemEval-2010 Task 8 and NYT with locally served Qwen models, reaching 30.99 and 47.10 respectively in single-split runs. On a sentence-level adaptation of BioCreative V CDR, the chemical-induced disease relation reached F1 14.97, well below an always-positive baseline. I also collected a new arXiv corpus with a six-relation schema and blank annotation sheets. The arXiv annotation, inter-annotator agreement, the REPaL run on arXiv, and the planned LLM-as-a-judge evaluation were not completed, and no results for them are reported.
 \end{abstract}
 
 \input{01-paper}
