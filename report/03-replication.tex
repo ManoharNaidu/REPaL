@@ -1,0 +1,59 @@
+\section{Replication}
+\label{sec:replication}
+
+\paragraph{Method.} I forked the authors' code\footnote{\url{https://github.com/ManoharNaidu/REPaL}} and replaced its two shell scripts, which contained unfilled placeholders and assumed four GPUs, with a Python driver that runs each dataset, split and stage, captures logs, and parses metrics. The hyperparameters follow the released configuration: \texttt{roberta-large-mnli}, learning rate $3\times10^{-5}$, 12 epochs, training batch 16, seed 3, and 15 positive plus 15 negative examples at both the initial and follow-up steps. Inference batch size was 512 instead of the authors' 3600--4200. Two stages were run: \emph{initial} (seed synthesis, training) and \emph{followup} (feedback-driven synthesis, retraining). The paper's headline number corresponds to \emph{followup}.
+
+All eight splits used the authors' cached GPT-4o synthesis (\texttt{gpt-4o-2024-05-13}), so no new API calls were needed.
+
+\paragraph{Environment and repairs.} Run logs show Python 3.12 in a Linux container, with runs started between 2026-10-06 and 2026-10-09. The logs do not record the exact torch, CUDA or GPU details. Notes taken on 2026-10-10 record Python 3.12.14, torch 2.11.0+cu128 and two RTX 5090 cards for the instance at that date, but package versions at run time were not recorded, so I treat these as indicative only. Several changes were needed for the 2024 code to run on current hardware: moving \texttt{BCELoss} outside \texttt{autocast}, passing \texttt{weights\_only=False} to \texttt{torch.load}, removing the torch pin (RTX 50-series cards need a newer CUDA build), and constraining \texttt{numpy<2} and \texttt{httpx<0.28}. I also capped a negative-feedback sampling step that crashed when a relation had too few confident predictions.
+
+\paragraph{Results.} All 16 runs exited successfully. Tables~\ref{tab:replication} and~\ref{tab:splitf1} give the results. Each FewRel split took 160--197 minutes for the initial stage and about 97 minutes for followup. WikiZSL took 179--253 and 137--147 minutes.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrr}
+\toprule
+ & P & R & F1 \\
+\midrule
+\multicolumn{4}{l}{\emph{DefOn-FewRel}} \\
+Ours, initial & 67.04 & 75.51 & 64.88 \\
+Paper, iter.\ 1 (Table 4) & 73.59 & 75.90 & 70.03 \\
+Ours, followup & 79.42 & 68.81 & 69.62 \\
+Paper, Table 1 & 78.86 & 77.28 & 74.61 \\
+\midrule
+\multicolumn{4}{l}{\emph{DefOn-WikiZSL}} \\
+Ours, initial & 64.72 & 51.41 & 49.15 \\
+Ours, followup & 68.69 & 42.33 & 45.95 \\
+Paper, Table 1 & 68.98 & 47.63 & 47.80 \\
+\bottomrule
+\end{tabular}
+\caption{Replication against the paper (means over 5 and 3 splits). The paper gives no initial-only WikiZSL figure.}
+\label{tab:replication}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Split & Initial F1 & Followup F1 \\
+\midrule
+FewRel 1 & 65.49 & 68.60 \\
+FewRel 2 & 65.39 & 75.59 \\
+FewRel 3 & 64.35 & 65.51 \\
+FewRel 4 & 66.20 & 68.77 \\
+FewRel 5 & 62.95 & 69.63 \\
+\midrule
+WikiZSL 1 & 51.25 & 51.27 \\
+WikiZSL 2 & 45.91 & 39.26 \\
+WikiZSL 3 & 50.29 & 47.32 \\
+\bottomrule
+\end{tabular}
+\caption{Per-split F1. Sample standard deviation of followup F1 is 3.68 (FewRel) and 6.12 (WikiZSL).}
+\label{tab:splitf1}
+\end{table}
+
+\paragraph{Assessment.} The replication is partial but close. WikiZSL followup F1 is 1.85 below the paper, within one standard deviation across splits. FewRel is 4.99 below, about 1.4 standard deviations. The pattern of the gap is informative. At followup, FewRel precision matches the paper (+0.56) while recall is 8.47 lower. At the initial stage the opposite holds: recall matches ($-$0.39) and precision is 6.55 lower. Feedback therefore moved our model further along the precision-recall trade-off than the paper reports. Feedback improved FewRel by 4.75 F1 points but reduced WikiZSL by 3.20, so the benefit reported in the paper was reproduced on only one of the two datasets.
+
+\paragraph{Possible reasons for the gaps.} I tested none of these conclusively. (a) \emph{Pool size}: the paper specifies 10,000 unlabelled instances, whereas the release has 100,000. I built a 10,000-instance pool for FewRel splits 1 and 2 by seeded sampling from the released pool. Initial F1 rose from 65.49 to 73.58 and from 65.39 to 69.61, which suggests the pool matters. However, this is only two splits and one seed, and the split 1 run reused existing checkpoints for many relations rather than training from scratch, so it is not a clean measurement. (b) \emph{Software}: the code targeted Python 3.8; I used 3.12 and much newer libraries. (c) \emph{Variance}: I used one seed per split. (d) \emph{Pool composition}: my 10,000-instance sample comes from the released 100,000, not the authors' original corpus, which is not released.
+
+\paragraph{Local LLM substitution.} OpenAI credits ran out during the extension work, so fresh synthesis moved to locally served models through an OpenAI-compatible vLLM server: Qwen2.5-32B-Instruct-AWQ \citep{qwen25} and, for one comparison, Qwen3-32B-AWQ \citep{qwen3}. The code needed no change. The 10,000-pool followup runs used Qwen2.5 on top of GPT-4o seeds (F1 65.90 and 70.27). Because these mix generators, I exclude them from the comparison with the paper. Results from different generators are never averaged together in this report.

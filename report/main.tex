@@ -1,0 +1,43 @@
+\documentclass[11pt]{article}
+\usepackage[final]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+% Items that still need the author. Search the PDF for these before submitting.
+\newcommand{\citeme}{\textbf{[CITE]}}
+\newcommand{\unverified}{\textbf{[UNVERIFIED]}}
+\newcommand{\snip}[1]{{\footnotesize\texttt{#1}}}
+
+\title{Reproducing and Extending Zero-Shot Relation Extraction with REPaL}
+
+\author{Manohar Naidu Bheesetti \\
+  Student ID: 48975257 \\
+  COMP8240: Applications of Data Science, Session 2, 2026 \\
+  Macquarie University \\
+  \texttt{manoharnaidu.bheesetti@students.mq.edu.au}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+REPaL trains a relation extractor from only a natural-language relation definition and an unlabelled corpus. I replicated it on the authors' DefOn-FewRel and DefOn-WikiZSL splits using their cached GPT-4o synthesis. Followup F1 was 69.62 on FewRel (paper: 74.61) and 45.95 on WikiZSL (paper: 47.80). I then applied it to SemEval-2010 Task 8 and NYT with locally served Qwen models, reaching 30.99 and 47.10 respectively in single-split runs. I also collected a new arXiv corpus with a six-relation schema and blank annotation sheets. The arXiv annotation, inter-annotator agreement, the REPaL run on arXiv, and the planned LLM-as-a-judge evaluation were not completed, and no results for them are reported.
+\end{abstract}
+
+\input{01-paper}
+\input{02-original-datasets}
+\input{03-replication}
+\input{04-new-data}
+\input{05-results-new-data}
+\input{06-ethics}
+\input{07-conclusions}
+
+\bibliographystyle{acl_natbib}
+\bibliography{refs}
+
+\end{document}

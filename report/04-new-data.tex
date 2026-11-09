@@ -1,0 +1,62 @@
+\section{Construction of New Data}
+\label{sec:newdata}
+
+The proposal named SemEval-2010 Task 8 and BioCreative V CDR as existing datasets, and a newly built scientific-literature resource. BioCreative V CDR was not completed within the project timeline. NYT was added as a second existing dataset.
+
+\subsection{SemEval-2010 Task 8}
+SemEval-2010 Task 8 \citep{hendrickx2010semeval} labels the relation between two nominals. I obtained it through FewRel 2.0's \texttt{val\_semeval.json} \citep{gao2019fewrel}. The builder script removes the 1,864 ``Other'' instances and the 2 instances of Entity-Destination(e2,e1), leaving 8,851 instances and 17 directed relations (the proposal's table listed 19). Definitions are the task's guideline sentences, and a template makes each one direction-aware. Removing ``Other'' makes this easier in that respect than the official 19-way task.
+
+\begin{quote}\small
+\textbf{Cause-Effect(e1,e2).} Definition: \snip{<ENT0> (an event or object) yields <ENT1> (an effect)}.
+Sentence: ``the singer , who performed three of the nominated songs , also caused a commotion on the red carpet .''
+Head: \emph{singer}; tail: \emph{commotion}.
+\end{quote}
+
+\subsection{NYT}
+NYT comes from FewRel 2.0's \texttt{val\_nyt.json}: 25 Wikidata relations with 100 news sentences each (2,500 instances). Of the 25 definitions, 18 reuse the REPaL authors' prompts and 7 were newly written in their style from Wikidata descriptions.
+
+\begin{quote}\small
+\textbf{P1056 (product or material produced).} Definition: \snip{<ENT1> (a product or material) was/is produced by <ENT0> (a business entity, government agency, industry, facility or process)}.
+Head: \emph{Williams International}; tail: \emph{jet engines}, in a sentence about a ``demonstration by about 150 people against manufacturing of jet engines for cruise missiles at the Williams International Corporation plant''.
+\end{quote}
+
+\paragraph{Transductive construction.} For both datasets the builders write the \emph{same} test instances, with the relation grouping removed, as the unlabelled pool: 8,851 of 8,851 (SemEval) and 2,500 of 2,500 (NYT) pool instances are test instances. Labels are hidden, but pool-based mining and feedback see the test sentences. Test--pool overlap also exists in the released data, but is far smaller: 43.7\% in FewRel split 1, 5.9--6.7\% in splits 2--5, and under 1\% in WikiZSL. SemEval and NYT scores should therefore be read as transductive, and are probably optimistic relative to an unseen-sentence evaluation.
+
+\subsection{New arXiv corpus}
+This resource is intended to test REPaL on scientific text. Its \emph{collection and preprocessing are complete; its annotation is not}.
+
+\paragraph{Collection.} A script queried the official arXiv API at no more than one request per 3.2 seconds. It sampled by month and primary category from 2025-01 to 2026-09, yielding 397 unique abstracts (cs.CL 83, cs.LG 80, cs.CV 80, cs.IR 80, stat.ML 74), dated 2025-01-01 to 2026-09-11.
+
+\paragraph{Preprocessing.} Sentence splitting gave 2,947 sentences, of which 2,846 passed an 8--60 token filter (mean 28.4, median 27). A heuristic mention detector (acronyms, CamelCase names, metric words, scores, and phrases such as ``\ldots\ model'') found 1,384 sentences with two or more mentions, giving 3,737 candidate pairs in REPaL's \texttt{distant.json} format. No scientific NER model was used, so mentions are noisy.
+
+\paragraph{Schema.} Table~\ref{tab:schema} shows the six relations, each stored in two directions (12 labels). The proposal's starting list changed: \texttt{proposes\_method} was dropped because its head, ``the paper'', is not an entity in the sentence, and \texttt{compares\_with\_baseline} became the directional \texttt{outperforms}.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabular}{p{0.32\columnwidth}p{0.56\columnwidth}}
+\toprule
+Relation & Head $\rightarrow$ tail \\
+\midrule
+\texttt{evaluated\_on} & method/model $\rightarrow$ dataset/benchmark \\
+\texttt{outperforms} & method $\rightarrow$ baseline/earlier method \\
+\texttt{achieves\_result} & method $\rightarrow$ score/metric value \\
+\texttt{builds\_on} & new method $\rightarrow$ earlier method \\
+\texttt{applied\_to\_task} & method $\rightarrow$ task/problem/domain \\
+\texttt{uses\_component} & method $\rightarrow$ technique/module/resource \\
+\bottomrule
+\end{tabular}
+\caption{arXiv relation schema.}
+\label{tab:schema}
+\end{table}
+
+\begin{quote}\small
+\textbf{Unlabelled candidate pair.} From ``Large Language Models ( LLMs ) have demonstrated remarkable reasoning capabilities \ldots'': head \emph{LLMs}, tail \emph{discovering effective reasoning methods}. The tail shows the mention detector's noise.
+
+\textbf{Definition.} \snip{<ENT0> (a method or model) is evaluated on <ENT1> (a dataset or benchmark)}.
+
+\textbf{Annotation-sheet row ax002} (arXiv 2601.15239), label columns blank: ``Applied to contextualized word embeddings from language models, MCPCA maps stages of a debate on human nature, revealing a discussion between science and fiction over decades.''
+\end{quote}
+
+\paragraph{Annotation material and status.} Two identical sheets each hold 100 sentences: 20 per category, one sentence per abstract, sampled with keyword cues plus some cue-free sentences. Each sheet has blank columns for head entity, tail entity, relation and notes. An annotator guide, an agreement script based on Cohen's $\kappa$ \citep{cohen1960coefficient}, and a converter to REPaL's format exist, and have been tested only on made-up rows.
+
+\textbf{No annotation took place.} All label cells in both sheets are empty. There are no annotators, no gold labels and no $\kappa$ value, and the arXiv test set was therefore never built.

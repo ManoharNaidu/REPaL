@@ -1,0 +1,39 @@
+\section{Results on New Data}
+\label{sec:newresults}
+
+Table~\ref{tab:newresults} gives the measured results. Each is a single split with seed 3, so none has a variance estimate.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrr}
+\toprule
+ & P & R & F1 \\
+\midrule
+\multicolumn{4}{l}{\emph{SemEval, Qwen2.5-32B}} \\
+Initial & 45.42 & 20.39 & 19.04 \\
+Followup & 45.49 & 35.86 & 30.99 \\
+\multicolumn{4}{l}{\emph{SemEval, Qwen3-32B}} \\
+Initial & 42.55 & 30.97 & 25.10 \\
+Followup & 46.72 & 25.70 & 19.64 \\
+\multicolumn{4}{l}{\emph{SemEval, GPT-4o (archived run)}} \\
+Initial & 57.18 & 34.59 & 35.67 \\
+\multicolumn{4}{l}{\emph{NYT, Qwen2.5-32B}} \\
+Initial & 51.95 & 56.96 & 48.35 \\
+Followup & 68.65 & 45.68 & 47.10 \\
+\bottomrule
+\end{tabular}
+\caption{Results on existing new datasets. The GPT-4o SemEval run has no followup stage because credits ran out.}
+\label{tab:newresults}
+\end{table}
+
+\paragraph{SemEval.} SemEval is much weaker than the replication. Precision is moderate and recall is the main problem. An analysis of the existing logs and initial-stage inference files found that no relation model fires on 64.6\% of test instances. Direction confusion is not the main failure: 10.0\% of false positives come from the reverse-direction class. The two Component-Whole models produce 74\% of false positives, and Member-Collection(e1,e2) and Cause-Effect(e1,e2) have F1 near zero in all four runs analysed. The inference files come from a slightly different checkpoint from the reported numbers (recomputed macro P/R of 48.3/16.1 against reported 45.4/20.4), so these are patterns rather than exact figures.
+
+A plausible cause is a mismatch between synthetic and real data. Real SemEval entities average 1.0--1.1 tokens in 19-token sentences. Seed entities (head/tail) average 1.9/2.1 tokens for GPT-4o in 23-token sentences, 3.6/3.7 for Qwen3 in 28-token sentences, and 4.2/4.9 for Qwen2.5 in 37-token sentences. Initial F1 follows the same order (35.67, 25.10, 19.04). This is a hypothesis from three single-seed runs, and within the Qwen2.5 run the seed span length does not track per-relation F1. Generator quality is also confounded with it.
+
+\paragraph{NYT.} NYT reaches 47.10, close to WikiZSL (45.95), with a Qwen2.5 generator. Feedback shifted the balance from recall to precision and lowered F1 slightly.
+
+\paragraph{Effect of feedback.} Followup improved on initial for FewRel (+4.75) and SemEval-Qwen2.5 (+11.95) but not WikiZSL ($-$3.20), NYT ($-$1.25), or SemEval-Qwen3 ($-$5.46). In the single-split cases, the differences may be within run-to-run variation, which I could not measure.
+
+\paragraph{Relation to the replication.} REPaL's performance depends strongly on the dataset. Scores on the new data are not comparable with the replication as a clean test of generalisation, for three reasons: the generators differ (GPT-4o against Qwen), the SemEval and NYT evaluations are transductive, and each has one split and one seed. The results do show that definitions alone do not guarantee transfer: SemEval's short, abstract definitions and single-noun entities were hard for the pipeline, even with GPT-4o seeds.
+
+\paragraph{Absent results.} There are \textbf{no results for the arXiv dataset}, because no gold labels exist and REPaL was not run on it. The planned \textbf{LLM-as-a-judge evaluation was not carried out}, so no judge scores or agreement figures exist. The BioCreative V CDR dataset was not completed within the project timeline. The per-iteration saturation analysis, a stretch goal, was also not done.
